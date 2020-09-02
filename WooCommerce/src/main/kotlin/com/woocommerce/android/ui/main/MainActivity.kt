@@ -790,7 +790,9 @@ class MainActivity : AppUpgradeActivity(),
         }
 
         val orderId = OrderIdentifier(localSiteId, remoteOrderId)
-        val action = OrderDetailFragmentNewDirections.actionGlobalOrderDetailFragment(orderId, remoteNoteId, markComplete)
+        val action = OrderDetailFragmentNewDirections.actionGlobalOrderDetailFragment(
+            orderId, remoteNoteId, markComplete
+        )
         navController.navigateSafely(action)
     }
 

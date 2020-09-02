@@ -34,6 +34,8 @@ import com.woocommerce.android.ui.base.UIMessageResolver
 import com.woocommerce.android.ui.main.MainActivity
 import com.woocommerce.android.ui.main.MainActivity.NavigationResult
 import com.woocommerce.android.ui.main.MainNavigationRouter
+import com.woocommerce.android.ui.orders.details.OrderDetailFragmentNewArgs
+import com.woocommerce.android.ui.orders.details.OrderDetailFragmentNewDirections
 import com.woocommerce.android.ui.orders.notes.OrderDetailOrderNoteListView.OrderDetailNoteListener
 import com.woocommerce.android.ui.orders.shippinglabels.ShippingLabelActionListener
 import com.woocommerce.android.util.CurrencyFormatter
@@ -82,7 +84,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
     private var deleteOrderShipmentTrackingResponseSnackbar: Snackbar? = null
     private var deleteOrderShipmentTrackingSet = mutableSetOf<WCOrderShipmentTrackingModel>()
 
-    private val navArgs: OrderDetailFragmentArgs by navArgs()
+    private val navArgs: OrderDetailFragmentNewArgs by navArgs()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -269,12 +271,12 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
 
             // Populate the Order Status Card
             val orderStatus = presenter.getOrderStatusForStatusKey(order.status)
-            orderDetail_orderStatus
-                    .initView(order, orderStatus, object : OrderDetailOrderStatusView.OrderStatusListener {
-                        override fun openOrderStatusSelector() {
-                            showOrderStatusSelector()
-                        }
-                    })
+//            orderDetail_orderStatus
+//                    .initView(order, orderStatus, object : OrderDetailOrderStatusView.OrderStatusListener {
+//                        override fun openOrderStatusSelector() {
+//                            showOrderStatusSelector()
+//                        }
+//                    })
 
             // check if product is a virtual product. If it is, hide only the shipping details card
             val isVirtualProduct = presenter.isVirtualProduct(order)
@@ -332,7 +334,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
     }
 
     override fun openOrderFulfillment(order: WCOrderModel) {
-        val action = OrderDetailFragmentDirections.actionOrderDetailFragmentToOrderFulfillmentFragment(
+        val action = OrderDetailFragmentNewDirections.actionOrderDetailFragmentToOrderFulfillmentFragment(
                 order.getIdentifier(),
                 order.number,
                 presenter.isShipmentTrackingsFetched
@@ -343,7 +345,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
     override fun issueOrderRefund(order: Order) {
         AnalyticsTracker.track(ORDER_DETAIL_ISSUE_REFUND_BUTTON_TAPPED)
 
-        val action = OrderDetailFragmentDirections.actionOrderDetailFragmentToIssueRefund(order.remoteId)
+        val action = OrderDetailFragmentNewDirections.actionOrderDetailFragmentToIssueRefund(order.remoteId)
         findNavController().navigateSafely(action)
     }
 
@@ -353,12 +355,12 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
                 AnalyticsTracker.KEY_ID to refundId
         ))
 
-        val action = OrderDetailFragmentDirections.actionOrderDetailFragmentToRefundDetailFragment(orderId, refundId)
+        val action = OrderDetailFragmentNewDirections.actionOrderDetailFragmentToRefundDetailFragment(orderId, refundId)
         findNavController().navigateSafely(action)
     }
 
     override fun openOrderProductList(order: WCOrderModel) {
-        val action = OrderDetailFragmentDirections.actionOrderDetailFragmentToOrderProductListFragment(
+        val action = OrderDetailFragmentNewDirections.actionOrderDetailFragmentToOrderProductListFragment(
                 order.getIdentifier(),
                 order.number
         )
@@ -366,7 +368,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
     }
 
     override fun openRefundedProductList(order: WCOrderModel) {
-        val action = OrderDetailFragmentDirections.actionOrderDetailFragmentToRefundDetailFragment(
+        val action = OrderDetailFragmentNewDirections.actionOrderDetailFragmentToRefundDetailFragment(
                 order.remoteOrderId
         )
         findNavController().navigateSafely(action)
@@ -379,7 +381,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
     override fun setOrderStatus(newStatus: String) {
         if (isAdded) {
             val orderStatus = presenter.getOrderStatusForStatusKey(newStatus)
-            orderDetail_orderStatus.updateStatus(orderStatus)
+//            orderDetail_orderStatus.updateStatus(orderStatus)
             presenter.orderModel?.let {
                 orderDetail_productList.updateView(it, this)
                 orderDetail_paymentInfo.initView(
@@ -511,7 +513,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
     }
 
     override fun showAddOrderNoteScreen(order: WCOrderModel) {
-        val action = OrderDetailFragmentDirections.actionOrderDetailFragmentToAddOrderNoteFragment(
+        val action = OrderDetailFragmentNewDirections.actionOrderDetailFragmentToAddOrderNoteFragment(
                 order.getIdentifier(),
                 order.number
         )
@@ -544,7 +546,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
         // Set the order status back to the previous status
         previousOrderStatus?.let {
             val orderStatus = presenter.getOrderStatusForStatusKey(it)
-            orderDetail_orderStatus.updateStatus(orderStatus)
+//            orderDetail_orderStatus.updateStatus(orderStatus)
             previousOrderStatus = null
         }
     }
@@ -612,7 +614,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
     override fun openAddOrderShipmentTrackingScreen() {
         AnalyticsTracker.track(ORDER_DETAIL_TRACKING_ADD_TRACKING_BUTTON_TAPPED)
         presenter.orderModel?.let { order ->
-            val action = OrderDetailFragmentDirections.actionOrderDetailFragmentToAddOrderShipmentTrackingFragment(
+            val action = OrderDetailFragmentNewDirections.actionOrderDetailFragmentToAddOrderShipmentTrackingFragment(
                     orderId = order.getIdentifier(),
                     orderTrackingProvider = AppPrefs.getSelectedShipmentTrackingProviderName(),
                     isCustomProvider = AppPrefs.getIsSelectedShipmentTrackingProviderCustom()
@@ -691,7 +693,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
     }
 
     override fun openShippingLabelRefund(orderId: Long, shippingLabelId: Long) {
-        val action = OrderDetailFragmentDirections.actionOrderDetailFragmentToOrderShippingLabelRefundFragment(
+        val action = OrderDetailFragmentNewDirections.actionOrderDetailFragmentToOrderShippingLabelRefundFragment(
             orderId, shippingLabelId
         )
         findNavController().navigateSafely(action)

@@ -5,9 +5,12 @@ import com.woocommerce.android.ui.orders.OrdersModule.AddOrderNoteFragmentModule
 import com.woocommerce.android.ui.orders.OrdersModule.AddOrderShipmentTrackingFragmentModule
 import com.woocommerce.android.ui.orders.OrdersModule.AddOrderTrackingProviderListFragmentModule
 import com.woocommerce.android.ui.orders.OrdersModule.OrderDetailFragmentModule
+import com.woocommerce.android.ui.orders.OrdersModule.OrderDetailFragmentNewModule
 import com.woocommerce.android.ui.orders.OrdersModule.OrderFulfillmentFragmentModule
 import com.woocommerce.android.ui.orders.OrdersModule.OrderListFragmentModule
 import com.woocommerce.android.ui.orders.OrdersModule.OrderProductListFragmentModule
+import com.woocommerce.android.ui.orders.details.OrderDetailFragmentNew
+import com.woocommerce.android.ui.orders.details.OrderDetailModuleNew
 import com.woocommerce.android.ui.orders.list.OrderListFragment
 import com.woocommerce.android.ui.orders.list.OrderListModule
 import com.woocommerce.android.ui.orders.notes.AddOrderNoteFragment
@@ -18,6 +21,7 @@ import dagger.android.ContributesAndroidInjector
 @Module(includes = [
     OrderListFragmentModule::class,
     OrderDetailFragmentModule::class,
+    OrderDetailFragmentNewModule::class,
     OrderProductListFragmentModule::class,
     OrderFulfillmentFragmentModule::class,
     AddOrderNoteFragmentModule::class,
@@ -37,6 +41,13 @@ object OrdersModule {
         @FragmentScope
         @ContributesAndroidInjector(modules = [OrderDetailModule::class])
         abstract fun orderDetailFragment(): OrderDetailFragment
+    }
+
+    @Module
+    abstract class OrderDetailFragmentNewModule {
+        @FragmentScope
+        @ContributesAndroidInjector(modules = [OrderDetailModuleNew::class])
+        abstract fun orderDetailFragmentNew(): OrderDetailFragmentNew
     }
 
     @Module

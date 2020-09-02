@@ -6,7 +6,6 @@ import com.woocommerce.android.R
 import com.woocommerce.android.model.Order.OrderStatus
 import com.woocommerce.android.widgets.tags.ITag
 import com.woocommerce.android.widgets.tags.TagConfig
-import org.wordpress.android.fluxc.model.WCOrderStatusModel
 import org.wordpress.android.fluxc.network.rest.wpcom.wc.order.CoreOrderStatus
 import java.util.Locale
 
