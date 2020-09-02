@@ -33,7 +33,7 @@
 
     <fragment
         android:id="@+id/orderDetailFragment"
-        android:name="com.woocommerce.android.ui.orders.OrderDetailFragment"
+        android:name="com.woocommerce.android.ui.orders.details.OrderDetailFragmentNew"
         tools:layout="@layout/fragment_order_detail">
         <argument
             android:name="orderId"

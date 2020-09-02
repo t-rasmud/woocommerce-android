@@ -46,7 +46,7 @@ import com.woocommerce.android.ui.main.BottomNavigationPosition.PRODUCTS
 import com.woocommerce.android.ui.main.BottomNavigationPosition.REVIEWS
 import com.woocommerce.android.ui.mystore.MyStoreFragment
 import com.woocommerce.android.ui.mystore.RevenueStatsAvailabilityFetcher
-import com.woocommerce.android.ui.orders.OrderDetailFragmentDirections
+import com.woocommerce.android.ui.orders.details.OrderDetailFragmentNewDirections
 import com.woocommerce.android.ui.orders.list.OrderListFragment
 import com.woocommerce.android.ui.prefs.AppSettingsActivity
 import com.woocommerce.android.ui.reviews.ReviewDetailFragmentDirections
@@ -790,7 +790,7 @@ class MainActivity : AppUpgradeActivity(),
         }
 
         val orderId = OrderIdentifier(localSiteId, remoteOrderId)
-        val action = OrderDetailFragmentDirections.actionGlobalOrderDetailFragment(orderId, remoteNoteId, markComplete)
+        val action = OrderDetailFragmentNewDirections.actionGlobalOrderDetailFragment(orderId, remoteNoteId, markComplete)
         navController.navigateSafely(action)
     }
 
