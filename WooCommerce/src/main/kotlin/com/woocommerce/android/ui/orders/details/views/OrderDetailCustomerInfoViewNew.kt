@@ -46,7 +46,7 @@ class OrderDetailCustomerInfoViewNew @JvmOverloads constructor(
             }
             else -> {
                 customerInfo_shippingAddr.text = shippingAddress
-                customerInfo_shippingMethodSection.isVisible = order.shippingMethodList.first()?.let {
+                customerInfo_shippingMethodSection.isVisible = order.shippingMethodList.firstOrNull()?.let {
                     customerInfo_shippingMethod.text = it
                     true
                 } ?: false
