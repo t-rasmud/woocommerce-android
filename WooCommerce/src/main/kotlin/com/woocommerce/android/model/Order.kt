@@ -161,7 +161,7 @@ data class Order(
         val shippingName = "${shippingAddress.firstName} ${shippingAddress.lastName}"
         val shippingAddress = this.shippingAddress.getEnvelopeAddress()
         val shippingCountry = AddressUtils.getCountryLabelByCountryCode(this.shippingAddress.country)
-        return this.billingAddress.getFullAddress(
+        return this.shippingAddress.getFullAddress(
             shippingName, shippingAddress, shippingCountry
         )
     }

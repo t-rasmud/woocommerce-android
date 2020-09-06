@@ -49,7 +49,6 @@ import org.wordpress.android.fluxc.store.NotificationStore.MarkNotificationsRead
 import org.wordpress.android.fluxc.store.NotificationStore.OnNotificationChanged
 import org.wordpress.android.fluxc.store.WCOrderStore
 import org.wordpress.android.fluxc.store.WCOrderStore.DeleteOrderShipmentTrackingPayload
-import org.wordpress.android.fluxc.store.WCOrderStore.FetchOrderNotesPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.FetchOrderShipmentTrackingsPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.FetchOrderStatusOptionsPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderChanged
@@ -200,7 +199,7 @@ class OrderDetailPresenter @Inject constructor(
      * for better ui testing
      */
     override fun fetchOrderNotesFromDb(order: WCOrderModel): List<WCOrderNoteModel> {
-        return orderStore.getOrderNotesForOrder(order)
+        return emptyList()
     }
 
     /**
@@ -375,8 +374,8 @@ class OrderDetailPresenter @Inject constructor(
                             mapOf(AnalyticsTracker.KEY_ID to order.remoteOrderId))
 
                     isUsingCachedNotes = false
-                    val notes = orderStore.getOrderNotesForOrder(order)
-                    orderView?.updateOrderNotes(notes)
+//                    val notes = orderStore.getOrderNotesForOrder(order)
+//                    orderView?.updateOrderNotes(notes)
                 }
             }
         } else if (event.causeOfChange == UPDATE_ORDER_STATUS) {
@@ -460,8 +459,8 @@ class OrderDetailPresenter @Inject constructor(
      * Request a fresh copy of order notes from the api.
      */
     fun requestOrderNotesFromApi(order: WCOrderModel) {
-        val payload = FetchOrderNotesPayload(order, selectedSite.get())
-        dispatcher.dispatch(WCOrderActionBuilder.newFetchOrderNotesAction(payload))
+//        val payload = FetchOrderNotesPayload(order, selectedSite.get())
+//        dispatcher.dispatch(WCOrderActionBuilder.newFetchOrderNotesAction(payload))
     }
 
     /**
