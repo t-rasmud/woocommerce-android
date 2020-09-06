@@ -203,9 +203,9 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
         }
 
         if (refunds.isNotEmpty()) {
-            orderDetail_paymentInfo.showRefunds(refunds.sortedBy { it.id })
+//            orderDetail_paymentInfo.showRefunds(refunds.sortedBy { it.id })
         } else {
-            orderDetail_paymentInfo.showRefundTotal()
+//            orderDetail_paymentInfo.showRefundTotal()
         }
     }
 
@@ -281,11 +281,11 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
 //            showOrderShippingNotice(isVirtualProduct, order)
 
             // Populate the Payment Information Card
-            orderDetail_paymentInfo.initView(
-                    order.toAppModel(),
-                    currencyFormatter.buildBigDecimalFormatter(order.currency),
-                    this
-            )
+//            orderDetail_paymentInfo.initView(
+//                    order.toAppModel(),
+//                    currencyFormatter.buildBigDecimalFormatter(order.currency),
+//                    this
+//            )
 
             if (isFreshData) {
                 isRefreshPending = false
@@ -377,11 +377,11 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
 //            orderDetail_orderStatus.updateStatus(orderStatus)
             presenter.orderModel?.let {
                 orderDetail_productList.updateView(it, this)
-                orderDetail_paymentInfo.initView(
-                        it.toAppModel(),
-                        currencyFormatter.buildBigDecimalFormatter(it.currency),
-                        this
-                )
+//                orderDetail_paymentInfo.initView(
+//                        it.toAppModel(),
+//                        currencyFormatter.buildBigDecimalFormatter(it.currency),
+//                        this
+//                )
             }
         }
     }

@@ -14,6 +14,7 @@ import com.woocommerce.android.model.Order
 import com.woocommerce.android.model.Order.OrderStatus
 import com.woocommerce.android.ui.base.BaseFragment
 import com.woocommerce.android.ui.base.UIMessageResolver
+import com.woocommerce.android.util.CurrencyFormatter
 import com.woocommerce.android.viewmodel.ViewModelFactory
 import com.woocommerce.android.widgets.SkeletonView
 import dagger.android.support.AndroidSupportInjection
@@ -24,6 +25,7 @@ class OrderDetailFragmentNew : BaseFragment() {
     @Inject lateinit var viewModelFactory: ViewModelFactory
     private val viewModel: OrderDetailViewModelNew by viewModels { viewModelFactory }
 
+    @Inject lateinit var currencyFormatter: CurrencyFormatter
     @Inject lateinit var uiMessageResolver: UIMessageResolver
 
     private val skeletonView = SkeletonView()
@@ -62,10 +64,14 @@ class OrderDetailFragmentNew : BaseFragment() {
 
     private fun showOrderDetail(order: Order) {
         orderDetail_orderStatus.updateOrder(order)
-        orderDetail_shippingMethodNotice.isVisible = !order.multiShippingLinesAvailable
+        orderDetail_shippingMethodNotice.isVisible = order.multiShippingLinesAvailable
         orderDetail_customerInfo.updateCustomerInfo(
             order = order,
             isVirtualOrder = viewModel.hasVirtualProductsOnly()
+        )
+        orderDetail_paymentInfo.updatePaymentInfo(
+            order = order,
+            formatCurrencyForDisplay = currencyFormatter.buildBigDecimalFormatter(order.currency)
         )
     }
 
