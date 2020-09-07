@@ -11,6 +11,7 @@ import com.woocommerce.android.di.ViewModelAssistedFactory
 import com.woocommerce.android.model.Order
 import com.woocommerce.android.model.Order.OrderStatus
 import com.woocommerce.android.model.OrderNote
+import com.woocommerce.android.model.Refund
 import com.woocommerce.android.tools.NetworkStatus
 import com.woocommerce.android.util.CoroutineDispatchers
 import com.woocommerce.android.viewmodel.LiveDataDelegate
@@ -42,6 +43,12 @@ class OrderDetailViewModelNew @AssistedInject constructor(
     private val _orderNotes = MutableLiveData<List<OrderNote>>()
     val orderNotes: LiveData<List<OrderNote>> = _orderNotes
 
+    private val _orderRefunds = MutableLiveData<List<Refund>>()
+    val orderRefunds: LiveData<List<Refund>> = _orderRefunds
+
+    val order: Order?
+    get() = orderDetailViewState.order
+
     override fun onCleared() {
         super.onCleared()
         orderDetailRepository.onCleanup()
@@ -52,6 +59,7 @@ class OrderDetailViewModelNew @AssistedInject constructor(
             orderDetailRepository.getOrder(navArgs.orderId)?.let { orderInDb ->
                 updateOrderState(orderInDb)
                 loadOrderNotes()
+                loadOrderRefunds()
             } ?: fetchOrder()
         }
     }
@@ -70,6 +78,7 @@ class OrderDetailViewModelNew @AssistedInject constructor(
             if (fetchedOrder != null) {
                 updateOrderState(fetchedOrder)
                 loadOrderNotes()
+                loadOrderRefunds()
             } else {
                 triggerEvent(ShowSnackbar(string.order_error_fetch_generic))
             }
@@ -101,6 +110,13 @@ class OrderDetailViewModelNew @AssistedInject constructor(
             orderDetailViewState = orderDetailViewState.copy(isOrderNotesSkeletonShown = false)
         } else {
             triggerEvent(ShowSnackbar(string.offline_error))
+        }
+    }
+
+    private suspend fun loadOrderRefunds() {
+        _orderRefunds.value = orderDetailRepository.getOrderRefunds(orderIdSet.remoteOrderId)
+        if (networkStatus.isConnected()) {
+            _orderRefunds.value = orderDetailRepository.fetchOrderRefunds(orderIdSet.remoteOrderId)
         }
     }
 
