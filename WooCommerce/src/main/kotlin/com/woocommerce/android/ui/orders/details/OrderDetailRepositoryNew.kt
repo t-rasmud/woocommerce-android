@@ -44,7 +44,6 @@ class OrderDetailRepositoryNew @Inject constructor(
 
     private var continuationFetchOrder: CancellableContinuation<Boolean>? = null
     private var continuationFetchOrderNotes: CancellableContinuation<Boolean>? = null
-    private var continuationFetchOrderRefunds: CancellableContinuation<Boolean>? = null
 
     init {
         dispatcher.register(this)

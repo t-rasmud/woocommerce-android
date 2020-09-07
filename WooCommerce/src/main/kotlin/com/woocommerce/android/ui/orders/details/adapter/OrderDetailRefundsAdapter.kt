@@ -1,4 +1,4 @@
-package com.woocommerce.android.ui.orders.details
+package com.woocommerce.android.ui.orders.details.adapter
 
 import android.text.format.DateFormat
 import android.view.LayoutInflater
@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.woocommerce.android.R
 import com.woocommerce.android.extensions.isEqualTo
 import com.woocommerce.android.model.Refund
+import com.woocommerce.android.ui.orders.details.adapter.OrderDetailRefundsAdapter.ViewHolder
 import kotlinx.android.synthetic.main.order_detail_refund_payment_item.view.*
 import java.math.BigDecimal
 
@@ -16,7 +17,7 @@ class OrderDetailRefundsAdapter(
     private val isCashPayment: Boolean,
     private val paymentMethodTitle: String,
     private val formatCurrency: (BigDecimal) -> String
-) : RecyclerView.Adapter<OrderDetailRefundsAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<ViewHolder>() {
     var refundList: List<Refund> = ArrayList()
         set(value) {
             val diffResult = DiffUtil.calculateDiff(
@@ -30,7 +31,12 @@ class OrderDetailRefundsAdapter(
         }
 
     override fun onCreateViewHolder(parent: ViewGroup, itemType: Int): ViewHolder {
-        return ViewHolder(parent, isCashPayment, paymentMethodTitle, formatCurrency)
+        return ViewHolder(
+            parent,
+            isCashPayment,
+            paymentMethodTitle,
+            formatCurrency
+        )
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {

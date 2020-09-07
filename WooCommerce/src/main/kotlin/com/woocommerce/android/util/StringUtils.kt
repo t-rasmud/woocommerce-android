@@ -46,6 +46,18 @@ object StringUtils {
         }
     }
 
+    fun getQuantityString(
+        context: Context,
+        quantity: Int,
+        @StringRes one: Int,
+        @StringRes default: Int
+    ): String {
+        return when (quantity) {
+            1 -> context.getString(one)
+            else -> context.getString(default, quantity)
+        }
+    }
+
     /**
      * Similar to UrlUtils.getHost() except that it includes the path (subfolder)
      *

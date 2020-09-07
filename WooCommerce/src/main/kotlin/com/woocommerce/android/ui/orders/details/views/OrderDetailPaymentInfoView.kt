@@ -13,7 +13,7 @@ import com.woocommerce.android.extensions.isEqualTo
 import com.woocommerce.android.extensions.show
 import com.woocommerce.android.model.Order
 import com.woocommerce.android.model.Refund
-import com.woocommerce.android.ui.orders.details.OrderDetailRefundsAdapter
+import com.woocommerce.android.ui.orders.details.adapter.OrderDetailRefundsAdapter
 import kotlinx.android.synthetic.main.order_detail_payment_info.view.*
 import java.math.BigDecimal
 
@@ -101,7 +101,11 @@ class OrderDetailPaymentInfoView @JvmOverloads constructor(
         formatCurrencyForDisplay: (BigDecimal) -> String
     ) {
         val adapter = paymentInfo_refunds.adapter as? OrderDetailRefundsAdapter
-            ?: OrderDetailRefundsAdapter(order.isCashPayment, order.paymentMethodTitle, formatCurrencyForDisplay)
+            ?: OrderDetailRefundsAdapter(
+                order.isCashPayment,
+                order.paymentMethodTitle,
+                formatCurrencyForDisplay
+            )
         paymentInfo_refunds.adapter = adapter
         adapter.refundList = refunds
 
