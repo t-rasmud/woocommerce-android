@@ -16,14 +16,12 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode.MAIN
 import org.wordpress.android.fluxc.Dispatcher
 import org.wordpress.android.fluxc.action.WCOrderAction
-import org.wordpress.android.fluxc.generated.WCOrderActionBuilder
 import org.wordpress.android.fluxc.model.WCOrderModel
 import org.wordpress.android.fluxc.model.WCOrderShipmentTrackingModel
 import org.wordpress.android.fluxc.model.refunds.WCRefundModel
 import org.wordpress.android.fluxc.model.shippinglabels.WCShippingLabelModel
 import org.wordpress.android.fluxc.network.rest.wpcom.wc.WooResult
 import org.wordpress.android.fluxc.store.WCOrderStore
-import org.wordpress.android.fluxc.store.WCOrderStore.FetchOrderShipmentTrackingsPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderChanged
 import org.wordpress.android.fluxc.store.WCRefundStore
 import org.wordpress.android.fluxc.store.WCShippingLabelStore
@@ -66,13 +64,13 @@ class OrderDetailRepository @Inject constructor(
                 .map { it.toAppModel() }
         } else emptyList()
 
-        val shipmentTrackingList = orderStore.getShipmentTrackingsForOrder(order)
+//        val shipmentTrackingList = orderStore.getShipmentTrackingsForOrder(order)
 
         return OrderDetailUiItem(
             orderModel = order,
             refunds = refunds,
             shippingLabels = shippingLabels,
-            shipmentTrackingList = shipmentTrackingList
+            shipmentTrackingList = emptyList()
         )
     }
 
@@ -104,15 +102,15 @@ class OrderDetailRepository @Inject constructor(
             } else emptyList()
 
             val refunds = fetchedRefunds?.model?.map { it.toAppModel() } ?: emptyList()
-            val shipmentTrackingList = if (fetchedShipmentTrackingList) {
-                orderStore.getShipmentTrackingsForOrder(order)
-            } else emptyList()
+//            val shipmentTrackingList = if (fetchedShipmentTrackingList) {
+//                orderStore.getShipmentTrackingsForOrder(order)
+//            } else emptyList()
 
             OrderDetailUiItem(
                 order,
                 refunds,
                 shippingLabels,
-                shipmentTrackingList
+                emptyList()
             )
         }
     }
@@ -129,8 +127,8 @@ class OrderDetailRepository @Inject constructor(
             suspendCoroutineWithTimeout<Boolean>(ACTION_TIMEOUT) {
                 continuationFetchShipmentTrackingList = it
 
-                val payload = FetchOrderShipmentTrackingsPayload(selectedSite.get(), order)
-                dispatcher.dispatch(WCOrderActionBuilder.newFetchOrderShipmentTrackingsAction(payload))
+//                val payload = FetchOrderShipmentTrackingsPayload(selectedSite.get(), order)
+//                dispatcher.dispatch(WCOrderActionBuilder.newFetchOrderShipmentTrackingsAction(payload))
             } ?: false // request timed out
         } catch (e: CancellationException) {
             WooLog.e(LOGIN, "Exception encountered while fetching shipment tracking info for order: " +

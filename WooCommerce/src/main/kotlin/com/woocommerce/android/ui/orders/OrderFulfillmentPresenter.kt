@@ -27,7 +27,6 @@ import org.wordpress.android.fluxc.model.WCOrderShipmentTrackingModel
 import org.wordpress.android.fluxc.model.order.OrderIdentifier
 import org.wordpress.android.fluxc.store.WCOrderStore
 import org.wordpress.android.fluxc.store.WCOrderStore.DeleteOrderShipmentTrackingPayload
-import org.wordpress.android.fluxc.store.WCOrderStore.FetchOrderShipmentTrackingsPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderChanged
 import org.wordpress.android.fluxc.store.WCProductStore
 import org.wordpress.android.fluxc.store.WCRefundStore
@@ -105,14 +104,15 @@ class OrderFulfillmentPresenter @Inject constructor(
     }
 
     override fun fetchShipmentTrackingsFromApi(order: WCOrderModel) {
-        val payload = FetchOrderShipmentTrackingsPayload(selectedSite.get(), order)
-        dispatcher.dispatch(WCOrderActionBuilder.newFetchOrderShipmentTrackingsAction(payload))
+//        val payload = FetchOrderShipmentTrackingsPayload(selectedSite.get(), order)
+//        dispatcher.dispatch(WCOrderActionBuilder.newFetchOrderShipmentTrackingsAction(payload))
     }
 
     /**
      * Segregating methods that request data from db for better ui testing
      */
-    override fun getShipmentTrackingsFromDb(order: WCOrderModel) = orderStore.getShipmentTrackingsForOrder(order)
+    override fun getShipmentTrackingsFromDb(order: WCOrderModel) = emptyList<WCOrderShipmentTrackingModel>()
+//        orderStore.getShipmentTrackingsForOrder(order)
 
     override fun loadShipmentTrackingsFromDb() {
         orderModel?.let { order ->

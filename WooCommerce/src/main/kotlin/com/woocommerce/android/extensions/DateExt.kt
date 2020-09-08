@@ -40,6 +40,8 @@ fun Date.getTimeString(context: Context) = DateFormat.getTimeFormat(context).for
 
 fun Date.getMediumDate(context: Context) = DateFormat.getMediumDateFormat(context).format(this)
 
+fun Date.getLongDate(context: Context) = DateFormat.getLongDateFormat(context).format(this)
+
 fun Date?.offsetGmtDate(gmtOffset: Float) = this?.let { DateUtils.offsetGmtDate(it, gmtOffset) }
 
 fun Date.formatToYYYYmmDDhhmmss(): String =

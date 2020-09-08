@@ -49,7 +49,6 @@ import org.wordpress.android.fluxc.store.NotificationStore.MarkNotificationsRead
 import org.wordpress.android.fluxc.store.NotificationStore.OnNotificationChanged
 import org.wordpress.android.fluxc.store.WCOrderStore
 import org.wordpress.android.fluxc.store.WCOrderStore.DeleteOrderShipmentTrackingPayload
-import org.wordpress.android.fluxc.store.WCOrderStore.FetchOrderShipmentTrackingsPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.FetchOrderStatusOptionsPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderChanged
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderStatusOptionsChanged
@@ -223,7 +222,8 @@ class OrderDetailPresenter @Inject constructor(
      * for better ui testing
      */
     override fun getOrderShipmentTrackingsFromDb(order: WCOrderModel): List<WCOrderShipmentTrackingModel> {
-        return orderStore.getShipmentTrackingsForOrder(order)
+//        return orderStore.getShipmentTrackingsForOrder(order)
+        return emptyList()
     }
 
     /**
@@ -467,8 +467,8 @@ class OrderDetailPresenter @Inject constructor(
      * Request a fresh copy of order shipment tracking records from the api.
      */
     fun requestShipmentTrackingsFromApi(order: WCOrderModel) {
-        val payload = FetchOrderShipmentTrackingsPayload(selectedSite.get(), order)
-        dispatcher.dispatch(WCOrderActionBuilder.newFetchOrderShipmentTrackingsAction(payload))
+//        val payload = FetchOrderShipmentTrackingsPayload(selectedSite.get(), order)
+//        dispatcher.dispatch(WCOrderActionBuilder.newFetchOrderShipmentTrackingsAction(payload))
     }
 
     @Suppress("unused")

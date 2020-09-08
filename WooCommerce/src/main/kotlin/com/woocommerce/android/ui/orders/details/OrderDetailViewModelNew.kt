@@ -11,7 +11,9 @@ import com.woocommerce.android.di.ViewModelAssistedFactory
 import com.woocommerce.android.model.Order
 import com.woocommerce.android.model.Order.OrderStatus
 import com.woocommerce.android.model.OrderNote
+import com.woocommerce.android.model.OrderShipmentTracking
 import com.woocommerce.android.model.Refund
+import com.woocommerce.android.model.RequestResult
 import com.woocommerce.android.model.getNonRefundedProducts
 import com.woocommerce.android.model.hasNonRefundedProducts
 import com.woocommerce.android.tools.NetworkStatus
@@ -51,6 +53,9 @@ class OrderDetailViewModelNew @AssistedInject constructor(
     private val _productList = MutableLiveData<List<Order.Item>>()
     val productList: LiveData<List<Order.Item>> = _productList
 
+    private val _shipmentTrackings = MutableLiveData<List<OrderShipmentTracking>>()
+    val shipmentTrackings: LiveData<List<OrderShipmentTracking>> = _shipmentTrackings
+
     val order: Order?
     get() = orderDetailViewState.order
 
@@ -65,6 +70,7 @@ class OrderDetailViewModelNew @AssistedInject constructor(
                 updateOrderState(orderInDb)
                 loadOrderNotes()
                 loadOrderRefunds()
+                loadShipmentTrackings()
             } ?: fetchOrder()
         }
     }
@@ -84,6 +90,7 @@ class OrderDetailViewModelNew @AssistedInject constructor(
                 updateOrderState(fetchedOrder)
                 loadOrderNotes()
                 loadOrderRefunds()
+                loadShipmentTrackings()
             } else {
                 triggerEvent(ShowSnackbar(string.order_error_fetch_generic))
             }
@@ -139,6 +146,19 @@ class OrderDetailViewModelNew @AssistedInject constructor(
         } ?: emptyList()
     }
 
+    private suspend fun loadShipmentTrackings() {
+        when (orderDetailRepository.fetchOrderShipmentTrackingList(orderIdSet.id, orderIdSet.remoteOrderId)) {
+            RequestResult.SUCCESS -> {
+                _shipmentTrackings.value = orderDetailRepository.getOrderShipmentTrackings(orderIdSet.id)
+                orderDetailViewState = orderDetailViewState.copy(isShipmentTrackingAvailable = true)
+            }
+            else -> {
+                orderDetailViewState = orderDetailViewState.copy(isShipmentTrackingAvailable = false)
+                _shipmentTrackings.value = emptyList()
+            }
+        }
+    }
+
     @Parcelize
     data class OrderDetailViewState(
         val order: Order? = null,
@@ -146,7 +166,8 @@ class OrderDetailViewModelNew @AssistedInject constructor(
         val orderStatus: OrderStatus? = null,
         val isOrderDetailSkeletonShown: Boolean? = null,
         val isOrderNotesSkeletonShown: Boolean? = null,
-        val isRefreshing: Boolean? = null
+        val isRefreshing: Boolean? = null,
+        val isShipmentTrackingAvailable: Boolean? = null
     ) : Parcelable
 
     @AssistedInject.Factory
