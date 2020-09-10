@@ -18,7 +18,6 @@ import com.woocommerce.android.extensions.expand
 import com.woocommerce.android.extensions.formatToMMMddYYYYhhmm
 import com.woocommerce.android.model.Order
 import com.woocommerce.android.model.ShippingLabel
-import com.woocommerce.android.model.loadProductItems
 import com.woocommerce.android.tools.ProductImageMap
 import com.woocommerce.android.ui.orders.shippinglabels.ShippingLabelActionListener
 import com.woocommerce.android.util.AddressUtils
@@ -89,13 +88,13 @@ class OrderDetailShippingLabelListView @JvmOverloads constructor(
         override fun onBindViewHolder(holder: ShippingLabelListViewHolder, position: Int) {
             val shippingLabel = shippingLabels[position]
             holder.bindTo(context, order, shippingLabel, formatCurrencyForDisplay, shippingLabelActionListener)
-            holder.bindProductItems(
-                context,
-                productImageMap,
-                shippingLabel.loadProductItems(order.items),
-                formatCurrencyForDisplay,
-                viewPool
-            )
+//            holder.bindProductItems(
+//                context,
+//                productImageMap,
+//                shippingLabel.loadProductItems(order.items),
+//                formatCurrencyForDisplay,
+//                viewPool
+//            )
         }
 
         override fun getItemCount() = shippingLabels.size

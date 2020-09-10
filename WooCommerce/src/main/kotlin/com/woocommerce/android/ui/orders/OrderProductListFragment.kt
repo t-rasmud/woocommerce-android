@@ -8,12 +8,10 @@ import androidx.navigation.fragment.navArgs
 import com.woocommerce.android.R
 import com.woocommerce.android.analytics.AnalyticsTracker
 import com.woocommerce.android.model.Refund
-import com.woocommerce.android.model.toAppModel
 import com.woocommerce.android.tools.ProductImageMap
 import com.woocommerce.android.ui.base.BaseFragment
 import com.woocommerce.android.ui.main.MainNavigationRouter
 import com.woocommerce.android.util.CurrencyFormatter
-import kotlinx.android.synthetic.main.fragment_order_product_list.*
 import org.wordpress.android.fluxc.model.WCOrderModel
 import javax.inject.Inject
 
@@ -48,15 +46,15 @@ class OrderProductListFragment : BaseFragment(), OrderProductListContract.View {
     }
 
     override fun showOrderProducts(order: WCOrderModel, refunds: List<Refund>) {
-        orderProducts_list.initView(
-                orderModel = order,
-                orderItems = order.toAppModel().getNonRefundedProducts(refunds),
-                productImageMap = productImageMap,
-                expanded = true,
-                formatCurrencyForDisplay = currencyFormatter.buildBigDecimalFormatter(order.currency),
-                orderListener = null,
-                productListener = this
-        )
+//        orderProducts_list.initView(
+//                orderModel = order,
+//                orderItems = order.toAppModel().getNonRefundedProducts(refunds),
+//                productImageMap = productImageMap,
+//                expanded = true,
+//                formatCurrencyForDisplay = currencyFormatter.buildBigDecimalFormatter(order.currency),
+//                orderListener = null,
+//                productListener = this
+//        )
     }
 
     override fun openOrderProductDetail(remoteProductId: Long) {

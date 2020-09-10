@@ -14,12 +14,9 @@ import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_DETAIL_TRAC
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_DETAIL_TRACKING_DELETE_BUTTON_TAPPED
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_DETAIL_VIEW_REFUND_DETAILS_BUTTON_TAPPED
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.SNACK_ORDER_MARKED_COMPLETE_UNDO_BUTTON_TAPPED
-import com.woocommerce.android.extensions.hide
-import com.woocommerce.android.extensions.show
 import com.woocommerce.android.model.Order
 import com.woocommerce.android.model.Refund
 import com.woocommerce.android.model.ShippingLabel
-import com.woocommerce.android.model.toAppModel
 import com.woocommerce.android.tools.NetworkStatus
 import com.woocommerce.android.tools.ProductImageMap
 import com.woocommerce.android.ui.base.BaseFragment
@@ -41,7 +38,7 @@ import org.wordpress.android.fluxc.network.rest.wpcom.wc.order.CoreOrderStatus
 import javax.inject.Inject
 
 class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetailNoteListener,
-        OrderStatusSelectorDialog.OrderStatusDialogListener, NavigationResult, ShippingLabelActionListener {
+    OrderStatusSelectorDialog.OrderStatusDialogListener, NavigationResult, ShippingLabelActionListener {
     companion object {
         const val ARG_DID_MARK_COMPLETE = "did_mark_complete"
         const val STATE_KEY_REFRESH_PENDING = "is-refresh-pending"
@@ -208,27 +205,36 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
     }
 
     override fun showShippingLabels(order: WCOrderModel, shippingLabels: List<ShippingLabel>) {
-        orderDetail_shippingLabelList.initView(
-            order.toAppModel(),
-            shippingLabels,
-            productImageMap,
-            currencyFormatter.buildBigDecimalFormatter(order.currency),
-            this
-        )
+        // Shipment tracking links are not available by default from the shipping label API
+        // Until this is available on the API side, we need to fetch the tracking link from the
+        // shipment tracking API (if available) and link the tracking link to the corresponding
+        // tracking number of a shipping label
+//        val shipmentTrackingList = presenter.getOrderShipmentTrackingsFromDb(order)
+//        shippingLabels.map { it.fetchTrackingLinks(shipmentTrackingList) }
+
+//        orderDetail_shippingLabelList.initView(
+//            order.toAppModel(),
+//            shippingLabels,
+//            productImageMap,
+//            currencyFormatter.buildBigDecimalFormatter(order.currency),
+//            this
+//        )
     }
 
     override fun showProductList(order: WCOrderModel, refunds: List<Refund>, shippingLabels: List<ShippingLabel>) {
         // populate the Order Product List Card if not all products are associated with any of the shipping labels
         // available or if there is at least 1 product that is not refunded
-        val orderModel = order.toAppModel()
-        val hasUnpackagedProducts = orderModel.hasUnpackagedProducts(shippingLabels)
-        if (hasUnpackagedProducts && orderModel.hasNonRefundedItems(refunds)) {
-            val unpackagedAndNonRefundedProducts =
-                orderModel.getUnpackagedAndNonRefundedProducts(refunds, shippingLabels)
-
-            val listTitle = if (shippingLabels.isNotEmpty() && hasUnpackagedProducts) {
-                getString(R.string.orderdetail_shipping_label_unpackaged_products_header)
-            } else null
+//        val orderModel = order.toAppModel()
+//        val hasUnpackagedProducts = orderModel.hasUnpackagedProducts(shippingLabels)
+//        if (hasUnpackagedProducts && orderModel.hasNonRefundedItems(refunds)) {
+//            val unpackagedAndNonRefundedProducts =
+//                orderModel.getUnpackagedAndNonRefundedProducts(refunds, shippingLabels)
+//
+//            val listTitle = if (hasVirtualProductsOnly(unpackagedAndNonRefundedProducts)) {
+//                getString(R.string.orderdetail_shipping_label_virtual_products_header)
+//            } else if (shippingLabels.isNotEmpty() && hasUnpackagedProducts) {
+//                getString(R.string.orderdetail_shipping_label_unpackaged_products_header)
+//            } else null
 
 //            orderDetail_productList.initView(
 //                orderModel = order,
@@ -240,10 +246,10 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
 //                productListener = this,
 //                listTitle = listTitle
 //            )
-            orderDetail_productList.show()
-        } else {
-            orderDetail_productList.hide()
-        }
+//            orderDetail_productList.show()
+//        } else {
+//            orderDetail_productList.hide()
+//        }
     }
 
     override fun showOrderDetail(order: WCOrderModel?, isFreshData: Boolean) {
@@ -339,8 +345,8 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
 
     override fun showRefundDetail(orderId: Long, refundId: Long) {
         AnalyticsTracker.track(ORDER_DETAIL_VIEW_REFUND_DETAILS_BUTTON_TAPPED, mapOf(
-                AnalyticsTracker.KEY_ORDER_ID to orderId,
-                AnalyticsTracker.KEY_ID to refundId
+            AnalyticsTracker.KEY_ORDER_ID to orderId,
+            AnalyticsTracker.KEY_ID to refundId
         ))
 
 //        val action = OrderDetailFragmentNewDirections.actionOrderDetailFragmentToRefundDetailFragment(orderId, refundId)
@@ -406,9 +412,9 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
 
         presenter.orderModel?.let { order ->
             AnalyticsTracker.track(Stat.ORDER_STATUS_CHANGE, mapOf(
-                    AnalyticsTracker.KEY_ID to order.remoteOrderId,
-                    AnalyticsTracker.KEY_FROM to order.status,
-                    AnalyticsTracker.KEY_TO to newStatus))
+                AnalyticsTracker.KEY_ID to order.remoteOrderId,
+                AnalyticsTracker.KEY_FROM to order.status,
+                AnalyticsTracker.KEY_TO to newStatus))
 
             previousOrderStatus = order.status
             order.status = newStatus
@@ -419,8 +425,8 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
             // Listener for the UNDO button in the snackbar
             val actionListener = View.OnClickListener {
                 AnalyticsTracker.track(
-                        Stat.ORDER_STATUS_CHANGE_UNDO,
-                        mapOf(AnalyticsTracker.KEY_ID to order.remoteOrderId))
+                    Stat.ORDER_STATUS_CHANGE_UNDO,
+                    mapOf(AnalyticsTracker.KEY_ID to order.remoteOrderId))
 
                 when (newStatus) {
                     CoreOrderStatus.COMPLETED.value ->
@@ -433,9 +439,9 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
 
                 // if the fulfilled status was undone, tell the main activity to update the unfilled order badge
                 if (newStatus == CoreOrderStatus.COMPLETED.value ||
-                        newStatus == CoreOrderStatus.PROCESSING.value ||
-                        previousOrderStatus == CoreOrderStatus.COMPLETED.value ||
-                        previousOrderStatus == CoreOrderStatus.PROCESSING.value) {
+                    newStatus == CoreOrderStatus.PROCESSING.value ||
+                    previousOrderStatus == CoreOrderStatus.COMPLETED.value ||
+                    previousOrderStatus == CoreOrderStatus.PROCESSING.value) {
                     (activity as? MainActivity)?.updateOrderBadge(true)
                 }
 
@@ -468,11 +474,11 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
                 else -> R.string.order_status_changed_to
             }
             changeOrderStatusSnackbar = uiMessageResolver
-                    .getUndoSnack(snackMsg, newStatus, actionListener = actionListener)
-                    .also {
-                        it.addCallback(callback)
-                        it.show()
-                    }
+                .getUndoSnack(snackMsg, newStatus, actionListener = actionListener)
+                .also {
+                    it.addCallback(callback)
+                    it.show()
+                }
         }
     }
 
@@ -571,7 +577,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
 
     override fun showDeleteTrackingErrorSnack() {
         deleteOrderShipmentTrackingResponseSnackbar =
-                uiMessageResolver.getSnack(R.string.order_shipment_tracking_delete_error)
+            uiMessageResolver.getSnack(R.string.order_shipment_tracking_delete_error)
         if ((deleteOrderShipmentTrackingSnackbar?.isShownOrQueued) == false) {
             deleteOrderShipmentTrackingResponseSnackbar?.show()
         }
@@ -579,7 +585,7 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
 
     override fun markTrackingDeletedOnSuccess() {
         deleteOrderShipmentTrackingResponseSnackbar =
-                uiMessageResolver.getSnack(R.string.order_shipment_tracking_delete_success)
+            uiMessageResolver.getSnack(R.string.order_shipment_tracking_delete_success)
         if ((deleteOrderShipmentTrackingSnackbar?.isShownOrQueued) == false) {
             deleteOrderShipmentTrackingResponseSnackbar?.show()
         }
@@ -665,11 +671,11 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
 
         // Display snack bar with undo option here
         deleteOrderShipmentTrackingSnackbar = uiMessageResolver
-                .getUndoSnack(R.string.order_shipment_tracking_delete_snackbar_msg, actionListener = actionListener)
-                .also {
-                    it.addCallback(callback)
-                    it.show()
-                }
+            .getUndoSnack(R.string.order_shipment_tracking_delete_snackbar_msg, actionListener = actionListener)
+            .also {
+                it.addCallback(callback)
+                it.show()
+            }
     }
 
     override fun onNavigationResult(requestCode: Int, result: Bundle) {
@@ -698,12 +704,12 @@ class OrderDetailFragment : BaseFragment(), OrderDetailContract.View, OrderDetai
             val orderStatusOptions = presenter.getOrderStatusOptions()
             val orderStatus = order.status
             orderStatusSelector = OrderStatusSelectorDialog
-                    .newInstance(
-                            orderStatusOptions,
-                            orderStatus,
-                            false,
-                            listener = this)
-                    .also { it.show(parentFragmentManager, OrderStatusSelectorDialog.TAG) }
+                .newInstance(
+                    orderStatusOptions,
+                    orderStatus,
+                    false,
+                    listener = this)
+                .also { it.show(parentFragmentManager, OrderStatusSelectorDialog.TAG) }
         }
     }
 

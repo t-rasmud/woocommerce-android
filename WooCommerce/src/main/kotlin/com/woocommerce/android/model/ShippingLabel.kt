@@ -1,33 +1,36 @@
 package com.woocommerce.android.model
 
 import android.os.Parcelable
+import com.woocommerce.android.ui.orders.shippinglabels.ShipmentTrackingUrls
 import kotlinx.android.parcel.IgnoredOnParcel
 import kotlinx.android.parcel.Parcelize
-import org.wordpress.android.fluxc.model.WCOrderShipmentTrackingModel
 import org.wordpress.android.fluxc.model.shippinglabels.WCShippingLabelModel
 import java.math.BigDecimal
 import java.util.Date
 
 @Parcelize
 data class ShippingLabel(
-    val id: Long,
+    val id: Long = 0L,
     val trackingNumber: String = "",
-    val carrierId: String,
-    val serviceName: String,
-    val status: String,
-    val createdDate: Date?,
-    val packageName: String,
+    val carrierId: String = "",
+    val serviceName: String = "",
+    val status: String = "",
+    val createdDate: Date? = null,
+    val packageName: String = "",
     val rate: BigDecimal = BigDecimal.ZERO,
     val refundableAmount: BigDecimal = BigDecimal.ZERO,
-    val currency: String,
-    val paperSize: String,
-    val productNames: List<String>,
+    val currency: String = "",
+    val paperSize: String = "",
+    val productNames: List<String> = emptyList(),
     val originAddress: Address? = null,
     val destinationAddress: Address? = null,
-    val refund: Refund? = null
+    val refund: Refund? = null,
+    val products: List<Order.Item> = emptyList()
 ) : Parcelable {
     @IgnoredOnParcel
-    var trackingLink: String? = null
+    var trackingLink: String = ShipmentTrackingUrls.fromCarrier(
+        carrierId, trackingNumber
+    ) ?: ""
 
     @Parcelize
     data class Refund(
@@ -79,25 +82,19 @@ fun WCShippingLabelModel.WCShippingLabelRefundModel.toAppModel(): ShippingLabel.
     )
 }
 
-/**
- * Method provides a list of [Order.Item] for the given [ShippingLabel.productNames]
- * in a shipping label.
- *
- * Used to display the list of products associated with a shipping label
- */
-fun ShippingLabel.loadProductItems(orderItems: List<Order.Item>) =
-    orderItems.filter { it.name in productNames }
+fun List<ShippingLabel>.getUnPackagedProducts(products: List<Order.Item>): List<Order.Item> {
+    val productNames = mutableSetOf<String>()
+    this.map { productNames.addAll(it.productNames) }
+    return products.filter { !productNames.contains(it.name) }
+}
 
 /**
- * Method matches the tracking link from the [WCOrderShipmentTrackingModel] to the
- * corresponding tracking number of a [ShippingLabel]
+ * Method fetches a list of product details for the product names associated with each shipping label
  */
-fun ShippingLabel.fetchTrackingLinks(
-    orderShipmentTrackings: List<WCOrderShipmentTrackingModel>
-) {
-    orderShipmentTrackings.forEach { shipmentTracking ->
-        if (shipmentTracking.trackingNumber == this.trackingNumber) {
-            this.trackingLink = shipmentTracking.trackingLink
-        }
+fun List<ShippingLabel>.loadProducts(products: List<Order.Item>): List<ShippingLabel> {
+    return this.map { shippingLabel ->
+        shippingLabel.copy(
+            products = products.filter { it.name in shippingLabel.productNames }
+        )
     }
 }

@@ -15,7 +15,6 @@ import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_FULFILLMENT
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_FULFILLMENT_TRACKING_DELETE_BUTTON_TAPPED
 import com.woocommerce.android.extensions.navigateSafely
 import com.woocommerce.android.model.Refund
-import com.woocommerce.android.model.toAppModel
 import com.woocommerce.android.tools.NetworkStatus
 import com.woocommerce.android.tools.ProductImageMap
 import com.woocommerce.android.ui.base.BaseFragment
@@ -87,15 +86,15 @@ class OrderFulfillmentFragment : BaseFragment(), OrderFulfillmentContract.View, 
 
     override fun showOrderDetail(order: WCOrderModel, refunds: List<Refund>) {
         // Populate the Order Product List Card
-        orderFulfill_products.initView(
-                orderModel = order,
-                orderItems = order.toAppModel().getNonRefundedProducts(refunds),
-                productImageMap = productImageMap,
-                expanded = true,
-                formatCurrencyForDisplay = currencyFormatter.buildBigDecimalFormatter(order.currency),
-                orderListener = null,
-                productListener = this
-        )
+//        orderFulfill_products.initView(
+//                orderModel = order,
+//                orderItems = order.toAppModel().getNonRefundedProducts(refunds),
+//                productImageMap = productImageMap,
+//                expanded = true,
+//                formatCurrencyForDisplay = currencyFormatter.buildBigDecimalFormatter(order.currency),
+//                orderListener = null,
+//                productListener = this
+//        )
 
         // check if product is a virtual product
         val isVirtualProduct = presenter.isVirtualProduct(order)
