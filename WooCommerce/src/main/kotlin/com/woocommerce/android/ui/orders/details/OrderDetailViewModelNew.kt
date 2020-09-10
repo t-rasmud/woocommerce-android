@@ -6,6 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import com.squareup.inject.assisted.Assisted
 import com.squareup.inject.assisted.AssistedInject
 import com.woocommerce.android.R.string
+import com.woocommerce.android.analytics.AnalyticsTracker
+import com.woocommerce.android.analytics.AnalyticsTracker.Stat
 import com.woocommerce.android.annotations.OpenClassOnDebug
 import com.woocommerce.android.di.ViewModelAssistedFactory
 import com.woocommerce.android.extensions.whenNotNullNorEmpty
@@ -71,7 +73,7 @@ class OrderDetailViewModelNew @AssistedInject constructor(
         orderDetailRepository.onCleanup()
     }
 
-    fun loadOrderDetail() {
+    init {
         launch {
             orderDetailRepository.getOrder(navArgs.orderId)?.let { orderInDb ->
                 updateOrderState(orderInDb)
@@ -79,8 +81,14 @@ class OrderDetailViewModelNew @AssistedInject constructor(
                 loadOrderRefunds()
                 loadShipmentTrackings()
                 loadOrderShippingLabels()
-            } ?: fetchOrder()
+            } ?: fetchOrder(true)
         }
+    }
+
+    fun onRefreshRequested() {
+        AnalyticsTracker.track(Stat.ORDER_DETAIL_PULLED_TO_REFRESH)
+        orderDetailViewState = orderDetailViewState.copy(isRefreshing = true)
+        launch { fetchOrder(false) }
     }
 
     fun hasVirtualProductsOnly(): Boolean {
@@ -90,9 +98,11 @@ class OrderDetailViewModelNew @AssistedInject constructor(
         } ?: false
     }
 
-    private suspend fun fetchOrder() {
+    private suspend fun fetchOrder(showSkeleton: Boolean) {
         if (networkStatus.isConnected()) {
-            orderDetailViewState = orderDetailViewState.copy(isOrderDetailSkeletonShown = true)
+            orderDetailViewState = orderDetailViewState.copy(
+                isOrderDetailSkeletonShown = showSkeleton
+            )
             val fetchedOrder = orderDetailRepository.fetchOrder(navArgs.orderId)
             if (fetchedOrder != null) {
                 updateOrderState(fetchedOrder)
@@ -103,9 +113,16 @@ class OrderDetailViewModelNew @AssistedInject constructor(
             } else {
                 triggerEvent(ShowSnackbar(string.order_error_fetch_generic))
             }
+            orderDetailViewState = orderDetailViewState.copy(
+                isOrderDetailSkeletonShown = false,
+                isRefreshing = false
+            )
         } else {
             triggerEvent(ShowSnackbar(string.offline_error))
-            orderDetailViewState = orderDetailViewState.copy(isOrderDetailSkeletonShown = false)
+            orderDetailViewState = orderDetailViewState.copy(
+                isOrderDetailSkeletonShown = false,
+                isRefreshing = false
+            )
         }
     }
 

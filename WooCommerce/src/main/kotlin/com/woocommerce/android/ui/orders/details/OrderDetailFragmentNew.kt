@@ -63,6 +63,14 @@ class OrderDetailFragmentNew : BaseFragment() {
         setupObservers(viewModel)
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        orderRefreshLayout?.apply {
+            scrollUpChild = scrollView
+            setOnRefreshListener { viewModel.onRefreshRequested() }
+        }
+    }
+
     private fun setupObservers(viewModel: OrderDetailViewModelNew) {
         viewModel.orderDetailViewStateData.observe(viewLifecycleOwner) { old, new ->
             new.order?.takeIfNotEqualTo(old?.order) { showOrderDetail(it) }
@@ -71,6 +79,9 @@ class OrderDetailFragmentNew : BaseFragment() {
             new.isOrderDetailSkeletonShown?.takeIfNotEqualTo(old?.isOrderDetailSkeletonShown) { showSkeleton(it) }
             new.isOrderNotesSkeletonShown?.takeIfNotEqualTo(old?.isOrderNotesSkeletonShown) {
                 showOrderNotesSkeleton(it)
+            }
+            new.isRefreshing?.takeIfNotEqualTo(old?.isRefreshing) {
+                orderRefreshLayout.isRefreshing = it
             }
             new.isShipmentTrackingAvailable?.takeIfNotEqualTo(old?.isShipmentTrackingAvailable) {
                 orderDetail_shipmentList.isVisible = it
@@ -92,7 +103,6 @@ class OrderDetailFragmentNew : BaseFragment() {
         viewModel.shippingLabels.observe(viewLifecycleOwner, Observer {
             showShippingLabels(it)
         })
-        viewModel.loadOrderDetail()
     }
 
     private fun showOrderDetail(order: Order) {
