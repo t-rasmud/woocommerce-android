@@ -3,11 +3,15 @@ package com.woocommerce.android.ui.orders
 import android.content.Context
 import android.os.Handler
 import com.woocommerce.android.analytics.AnalyticsTracker
-import com.woocommerce.android.analytics.AnalyticsTracker.Stat
+import com.woocommerce.android.analytics.AnalyticsTracker.Stat.NOTIFICATION_OPEN
+import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_NOTES_LOADED
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_NOTE_ADD_FAILED
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_NOTE_ADD_SUCCESS
+import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_STATUS_CHANGE_FAILED
+import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_STATUS_CHANGE_SUCCESS
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_TRACKING_ADD_FAILED
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_TRACKING_ADD_SUCCESS
+import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_TRACKING_DELETE
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_TRACKING_DELETE_FAILED
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_TRACKING_DELETE_SUCCESS
 import com.woocommerce.android.extensions.isVirtualProduct
@@ -17,20 +21,23 @@ import com.woocommerce.android.push.NotificationHandler
 import com.woocommerce.android.tools.NetworkStatus
 import com.woocommerce.android.tools.SelectedSite
 import com.woocommerce.android.ui.base.UIMessageResolver
+import com.woocommerce.android.ui.orders.OrderDetailContract.Presenter
+import com.woocommerce.android.ui.orders.OrderDetailContract.View
 import com.woocommerce.android.ui.orders.OrderDetailRepository.OrderDetailUiItem
 import com.woocommerce.android.util.CoroutineDispatchers
 import com.woocommerce.android.util.WooLog
-import com.woocommerce.android.util.WooLog.T
 import com.woocommerce.android.util.WooLog.T.NOTIFICATIONS
+import com.woocommerce.android.util.WooLog.T.ORDERS
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode.MAIN
 import org.wordpress.android.fluxc.Dispatcher
 import org.wordpress.android.fluxc.action.NotificationAction.MARK_NOTIFICATIONS_READ
-import org.wordpress.android.fluxc.action.WCOrderAction
 import org.wordpress.android.fluxc.action.WCOrderAction.ADD_ORDER_SHIPMENT_TRACKING
 import org.wordpress.android.fluxc.action.WCOrderAction.DELETE_ORDER_SHIPMENT_TRACKING
+import org.wordpress.android.fluxc.action.WCOrderAction.FETCH_ORDER_NOTES
+import org.wordpress.android.fluxc.action.WCOrderAction.FETCH_SINGLE_ORDER
 import org.wordpress.android.fluxc.action.WCOrderAction.POST_ORDER_NOTE
 import org.wordpress.android.fluxc.action.WCOrderAction.UPDATE_ORDER_STATUS
 import org.wordpress.android.fluxc.action.WCProductAction.FETCH_SINGLE_PRODUCT
@@ -43,13 +50,14 @@ import org.wordpress.android.fluxc.model.WCOrderStatusModel
 import org.wordpress.android.fluxc.model.notification.NotificationModel
 import org.wordpress.android.fluxc.model.order.OrderIdentifier
 import org.wordpress.android.fluxc.model.order.toIdSet
-import org.wordpress.android.fluxc.network.rest.wpcom.wc.order.CoreOrderStatus
+import org.wordpress.android.fluxc.network.rest.wpcom.wc.order.CoreOrderStatus.COMPLETED
 import org.wordpress.android.fluxc.store.NotificationStore
 import org.wordpress.android.fluxc.store.NotificationStore.MarkNotificationsReadPayload
 import org.wordpress.android.fluxc.store.NotificationStore.OnNotificationChanged
 import org.wordpress.android.fluxc.store.WCOrderStore
 import org.wordpress.android.fluxc.store.WCOrderStore.DeleteOrderShipmentTrackingPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.FetchOrderStatusOptionsPayload
+import org.wordpress.android.fluxc.store.WCOrderStore.FetchSingleOrderPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderChanged
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderStatusOptionsChanged
 import org.wordpress.android.fluxc.store.WCOrderStore.UpdateOrderStatusPayload
@@ -58,7 +66,7 @@ import org.wordpress.android.fluxc.store.WCProductStore.OnProductChanged
 import javax.inject.Inject
 
 class OrderDetailPresenter @Inject constructor(
-    private val dispatchers: CoroutineDispatchers,
+    dispatchers: CoroutineDispatchers,
     private val dispatcher: Dispatcher,
     private val orderStore: WCOrderStore,
     private val productStore: WCProductStore,
@@ -67,7 +75,7 @@ class OrderDetailPresenter @Inject constructor(
     private val networkStatus: NetworkStatus,
     private val notificationStore: NotificationStore,
     private val orderDetailRepository: OrderDetailRepository
-) : OrderDetailContract.Presenter {
+) : Presenter {
     companion object {
         private val TAG: String = OrderDetailPresenter::class.java.simpleName
     }
@@ -87,20 +95,19 @@ class OrderDetailPresenter @Inject constructor(
     private var pendingRemoteOrderId: Long? = null
     private var pendingMarkReadNotification: NotificationModel? = null
 
-    private var orderView: OrderDetailContract.View? = null
+    private var orderView: View? = null
     private var isNotesInit = false
     private var isRefreshingOrderStatusOptions = false
 
     override val coroutineScope = CoroutineScope(dispatchers.main)
 
-    override fun takeView(view: OrderDetailContract.View) {
+    override fun takeView(view: View) {
         orderView = view
         dispatcher.register(this)
         ConnectionChangeReceiver.getEventBus().register(this)
     }
 
     override fun dropView() {
-        super.dropView()
         orderView = null
         isNotesInit = false
         dispatcher.unregister(this)
@@ -123,7 +130,7 @@ class OrderDetailPresenter @Inject constructor(
             orderModel = loadOrderDetailFromDb(orderIdentifier)
             orderModel?.let { order ->
                 orderView?.showOrderDetail(order, isFreshData = false)
-                if (markComplete) orderView?.showChangeOrderStatusSnackbar(CoreOrderStatus.COMPLETED.value)
+                if (markComplete) orderView?.showChangeOrderStatusSnackbar(COMPLETED.value)
                 loadOrderDetailInfo(order)
                 loadOrderNotes()
             } ?: fetchOrder(orderIdentifier.toIdSet().remoteOrderId, true)
@@ -131,41 +138,41 @@ class OrderDetailPresenter @Inject constructor(
     }
 
     override fun loadOrderDetailInfo(order: WCOrderModel) {
-        orderModel?.let {
-            val cachedOrderDetailUiItem = orderDetailRepository.getOrderDetailInfoFromDb(it)
+        val cachedOrderDetailUiItem = orderDetailRepository.getOrderDetailInfoFromDb(order)
 
-            // if there are no shipping labels cached in the db, we prefer not to show the product list
-            // till it can be fetched from the API
-            displayOrderDetailInfo(order, cachedOrderDetailUiItem, cachedOrderDetailUiItem.shippingLabels.isNotEmpty())
+        // if there are no shipping labels cached in the db, we prefer not to show the product list
+        // till it can be fetched from the API
+        displayOrderDetailInfo(order, cachedOrderDetailUiItem)
 
-            fetchOrderDetailInfo(it)
-        }
+        fetchOrderDetailInfo(order)
     }
 
     override fun fetchOrderDetailInfo(order: WCOrderModel) {
         coroutineScope.launch {
             val freshOrderDetailUiItem = orderDetailRepository.fetchOrderDetailInfo(order)
-            displayOrderDetailInfo(order, freshOrderDetailUiItem, true)
+            displayOrderDetailInfo(order, freshOrderDetailUiItem)
         }
     }
 
     private fun displayOrderDetailInfo(
         order: WCOrderModel,
-        orderDetailUiItem: OrderDetailUiItem,
-        displayProductList: Boolean
+        orderDetailUiItem: OrderDetailUiItem
     ) {
         orderView?.showRefunds(orderDetailUiItem.orderModel, orderDetailUiItem.refunds)
-        orderView?.showShippingLabels(orderDetailUiItem.orderModel, orderDetailUiItem.shippingLabels)
+//        orderView?.showShippingLabels(
+//            order = orderDetailUiItem.orderModel,
+//            shippingLabels = orderDetailUiItem.shippingLabels.appendTrackingUrls(orderDetailUiItem.shipmentTrackingList)
+//        )
 
         // display the product list only if we know for sure,
         // that there are no shipping labels available for the order
-        if (displayProductList) {
-            orderView?.showProductList(order, orderDetailUiItem.refunds, orderDetailUiItem.shippingLabels)
-        }
+        orderView?.showProductList(order, orderDetailUiItem.refunds, orderDetailUiItem.shippingLabels)
 
         // Display the shipment tracking list only if it's available and if there are no shipping labels available
-        if (orderDetailUiItem.shippingLabels.isEmpty() && orderDetailUiItem.shipmentTrackingList.isNotEmpty()) {
+        if (orderDetailUiItem.shippingLabels.isEmpty() && orderDetailUiItem.isShipmentTrackingAvailable) {
             orderView?.showOrderShipmentTrackings(orderDetailUiItem.shipmentTrackingList)
+        } else {
+            orderView?.hideOrderShipmentTrackings()
         }
     }
 
@@ -244,7 +251,7 @@ class OrderDetailPresenter @Inject constructor(
 
     override fun fetchOrder(remoteOrderId: Long, displaySkeleton: Boolean) {
         orderView?.showSkeleton(displaySkeleton)
-        val payload = WCOrderStore.FetchSingleOrderPayload(selectedSite.get(), remoteOrderId)
+        val payload = FetchSingleOrderPayload(selectedSite.get(), remoteOrderId)
         dispatcher.dispatch(WCOrderActionBuilder.newFetchSingleOrderAction(payload))
     }
 
@@ -281,7 +288,8 @@ class OrderDetailPresenter @Inject constructor(
         NotificationHandler.removeNotificationWithNoteIdFromSystemBar(context, remoteNoteId.toString())
         notificationStore.getNotificationByRemoteId(remoteNoteId)?.let {
             // Send event that an order with a matching notification was opened
-            AnalyticsTracker.track(Stat.NOTIFICATION_OPEN, mapOf(
+            AnalyticsTracker.track(
+                NOTIFICATION_OPEN, mapOf(
                     AnalyticsTracker.KEY_TYPE to AnalyticsTracker.VALUE_ORDER,
                     AnalyticsTracker.KEY_ALREADY_READ to it.read))
 
@@ -335,7 +343,8 @@ class OrderDetailPresenter @Inject constructor(
         }
 
         orderModel?.let { order ->
-            AnalyticsTracker.track(Stat.ORDER_TRACKING_DELETE, mapOf(
+            AnalyticsTracker.track(
+                ORDER_TRACKING_DELETE, mapOf(
                     AnalyticsTracker.KEY_SOURCE to AnalyticsTracker.VALUE_ORDER_DETAIL
             ))
             val payload = DeleteOrderShipmentTrackingPayload(selectedSite.get(), order, wcOrderShipmentTrackingModel)
@@ -346,31 +355,29 @@ class OrderDetailPresenter @Inject constructor(
     @Suppress("unused")
     @Subscribe(threadMode = MAIN)
     fun onOrderChanged(event: OnOrderChanged) {
-        if (event.causeOfChange == WCOrderAction.FETCH_SINGLE_ORDER) {
+        if (event.causeOfChange == FETCH_SINGLE_ORDER) {
             if (event.isError || (orderIdentifier.isNullOrBlank() && pendingRemoteOrderId == null)) {
                 orderView?.showLoadOrderError()
                 val message = event.error?.message ?: "empty orderIdentifier"
-                WooLog.e(T.ORDERS, "$TAG - Error fetching order : $message")
+                WooLog.e(ORDERS, "$TAG - Error fetching order : $message")
             } else {
                 orderModel = loadOrderDetailFromDb(orderIdentifier!!)
-                coroutineScope.launch {
-                    orderModel?.let { order ->
-                        orderView?.showOrderDetail(order, isFreshData = true)
-                        orderView?.showSkeleton(false)
-                        loadOrderNotes()
-                        fetchOrderDetailInfo(order)
-                    } ?: orderView?.showLoadOrderError()
-                }
+                orderModel?.let { order ->
+                    orderView?.showOrderDetail(order, isFreshData = true)
+                    orderView?.showSkeleton(false)
+                    fetchOrderDetailInfo(order)
+                    loadOrderNotes()
+                } ?: orderView?.showLoadOrderError()
             }
-        } else if (event.causeOfChange == WCOrderAction.FETCH_ORDER_NOTES) {
+        } else if (event.causeOfChange == FETCH_ORDER_NOTES) {
             orderView?.showOrderNotesSkeleton(false)
             if (event.isError) {
-                WooLog.e(T.ORDERS, "$TAG - Error fetching order notes : ${event.error.message}")
+                WooLog.e(ORDERS, "$TAG - Error fetching order notes : ${event.error.message}")
                 orderView?.showNotesErrorSnack()
             } else {
                 orderModel?.let { order ->
                     AnalyticsTracker.track(
-                            Stat.ORDER_NOTES_LOADED,
+                            ORDER_NOTES_LOADED,
                             mapOf(AnalyticsTracker.KEY_ID to order.remoteOrderId))
 
                     isUsingCachedNotes = false
@@ -380,10 +387,10 @@ class OrderDetailPresenter @Inject constructor(
             }
         } else if (event.causeOfChange == UPDATE_ORDER_STATUS) {
             if (event.isError) {
-                WooLog.e(T.ORDERS, "$TAG - Error updating order status : ${event.error.message}")
+                WooLog.e(ORDERS, "$TAG - Error updating order status : ${event.error.message}")
 
                 AnalyticsTracker.track(
-                        Stat.ORDER_STATUS_CHANGE_FAILED, mapOf(
+                        ORDER_STATUS_CHANGE_FAILED, mapOf(
                         AnalyticsTracker.KEY_ERROR_CONTEXT to this::class.java.simpleName,
                         AnalyticsTracker.KEY_ERROR_TYPE to event.error.type.toString(),
                         AnalyticsTracker.KEY_ERROR_DESC to event.error.message))
@@ -393,7 +400,7 @@ class OrderDetailPresenter @Inject constructor(
                     it.markOrderStatusChangedFailed()
                 }
             } else {
-                AnalyticsTracker.track(Stat.ORDER_STATUS_CHANGE_SUCCESS)
+                AnalyticsTracker.track(ORDER_STATUS_CHANGE_SUCCESS)
 
                 // Successfully marked order status changed
                 orderModel?.let {
@@ -412,7 +419,7 @@ class OrderDetailPresenter @Inject constructor(
                         AnalyticsTracker.KEY_ERROR_TYPE to event.error.type.toString(),
                         AnalyticsTracker.KEY_ERROR_DESC to event.error.message))
 
-                WooLog.e(T.ORDERS, "$TAG - Error posting order note : ${event.error.message}")
+                WooLog.e(ORDERS, "$TAG - Error posting order note : ${event.error.message}")
                 orderView?.showAddOrderNoteErrorSnack()
             } else {
                 AnalyticsTracker.track(ORDER_NOTE_ADD_SUCCESS)
@@ -424,7 +431,7 @@ class OrderDetailPresenter @Inject constructor(
         } else if (event.causeOfChange == DELETE_ORDER_SHIPMENT_TRACKING) {
             if (event.isError) {
                 AnalyticsTracker.track(ORDER_TRACKING_DELETE_FAILED)
-                WooLog.e(T.ORDERS, "$TAG - Error deleting order shipment tracking : ${event.error.message}")
+                WooLog.e(ORDERS, "$TAG - Error deleting order shipment tracking : ${event.error.message}")
                 orderView?.showDeleteTrackingErrorSnack()
                 orderView?.undoDeletedTrackingOnError(deletedOrderShipmentTrackingModel)
                 deletedOrderShipmentTrackingModel = null
@@ -443,7 +450,7 @@ class OrderDetailPresenter @Inject constructor(
                         AnalyticsTracker.KEY_ERROR_TYPE to event.error.type.toString(),
                         AnalyticsTracker.KEY_ERROR_DESC to event.error.message))
 
-                WooLog.e(T.ORDERS, "$TAG - Error posting order note : ${event.error.message}")
+                WooLog.e(ORDERS, "$TAG - Error posting order note : ${event.error.message}")
                 orderView?.showAddAddShipmentTrackingErrorSnack()
             } else {
                 AnalyticsTracker.track(ORDER_TRACKING_ADD_SUCCESS)
@@ -502,7 +509,8 @@ class OrderDetailPresenter @Inject constructor(
         isRefreshingOrderStatusOptions = false
 
         if (event.isError) {
-            WooLog.e(T.ORDERS, "$TAG " +
+            WooLog.e(
+                ORDERS, "$TAG " +
                     "- Error fetching order status options from the api : ${event.error.message}")
             return
         }

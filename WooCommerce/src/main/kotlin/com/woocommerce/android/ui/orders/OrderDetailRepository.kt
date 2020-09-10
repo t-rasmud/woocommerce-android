@@ -70,7 +70,8 @@ class OrderDetailRepository @Inject constructor(
             orderModel = order,
             refunds = refunds,
             shippingLabels = shippingLabels,
-            shipmentTrackingList = emptyList()
+            shipmentTrackingList = emptyList(),
+            isShipmentTrackingAvailable = false
         )
     }
 
@@ -110,7 +111,8 @@ class OrderDetailRepository @Inject constructor(
                 order,
                 refunds,
                 shippingLabels,
-                emptyList()
+                emptyList(),
+                isShipmentTrackingAvailable = fetchedShipmentTrackingList
             )
         }
     }
@@ -155,6 +157,7 @@ class OrderDetailRepository @Inject constructor(
         val orderModel: WCOrderModel,
         val refunds: List<Refund>,
         val shippingLabels: List<ShippingLabel>,
-        val shipmentTrackingList: List<WCOrderShipmentTrackingModel>
+        val shipmentTrackingList: List<WCOrderShipmentTrackingModel>,
+        val isShipmentTrackingAvailable: Boolean
     )
 }
