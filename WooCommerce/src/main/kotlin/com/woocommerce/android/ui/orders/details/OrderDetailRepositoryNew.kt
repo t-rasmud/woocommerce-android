@@ -52,6 +52,8 @@ class OrderDetailRepositoryNew @Inject constructor(
     private var continuationFetchOrderNotes: CancellableContinuation<Boolean>? = null
     private var continuationFetchOrderShipmentTrackingList: CancellableContinuation<RequestResult>? = null
 
+    private var continuationUpdateOrderStatus: CancellableContinuation<Boolean>? = null
+
     init {
         dispatcher.register(this)
     }
@@ -127,6 +129,8 @@ class OrderDetailRepositoryNew @Inject constructor(
     }
 
     fun getOrder(orderIdentifier: OrderIdentifier) = orderStore.getOrderByIdentifier(orderIdentifier)?.toAppModel()
+
+    fun getOrderStatusOptions() = orderStore.getOrderStatusOptionsForSite(selectedSite.get()).map { it.toOrderStatus() }
 
     fun getOrderStatus(key: String): OrderStatus {
         return (orderStore.getOrderStatusForSiteAndKey(selectedSite.get(), key) ?: WCOrderStatusModel().apply {
