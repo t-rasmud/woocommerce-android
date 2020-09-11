@@ -735,7 +735,7 @@ class MainActivity : AppUpgradeActivity(),
                 NEW_ORDER -> {
                     selectedSite.getIfExists()?.let { site ->
                         note.getRemoteOrderId()?.let { orderId ->
-                            showOrderDetail(site.id, orderId, note.remoteNoteId)
+                            showOrderDetail(site.id, remoteOrderId = orderId, remoteNoteId = note.remoteNoteId)
                         }
                     }
                 }
@@ -772,7 +772,13 @@ class MainActivity : AppUpgradeActivity(),
         navController.navigateSafely(action)
     }
 
-    override fun showOrderDetail(localSiteId: Int, remoteOrderId: Long, remoteNoteId: Long, markComplete: Boolean) {
+    override fun showOrderDetail(
+        localSiteId: Int,
+        localOrderId: Int,
+        remoteOrderId: Long,
+        remoteNoteId: Long,
+        markComplete: Boolean
+    ) {
         if (bottomNavView.currentPosition != ORDERS) {
             bottomNavView.currentPosition = ORDERS
             val navPos = ORDERS.position
@@ -790,7 +796,7 @@ class MainActivity : AppUpgradeActivity(),
             }
         }
 
-        val orderId = OrderIdentifier(localSiteId, remoteOrderId)
+        val orderId = OrderIdentifier(localOrderId, localSiteId, remoteOrderId)
         val action = OrderDetailFragmentNewDirections.actionGlobalOrderDetailFragment(
             orderId, remoteNoteId, markComplete
         )
