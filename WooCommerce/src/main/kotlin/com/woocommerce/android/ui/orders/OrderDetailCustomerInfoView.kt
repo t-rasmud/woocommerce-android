@@ -9,14 +9,13 @@ import com.google.android.material.card.MaterialCardView
 import com.woocommerce.android.R
 import com.woocommerce.android.analytics.AnalyticsTracker
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat
-import com.woocommerce.android.util.AddressUtils
-import com.woocommerce.android.util.PhoneUtils
 import com.woocommerce.android.extensions.collapse
 import com.woocommerce.android.extensions.expand
 import com.woocommerce.android.extensions.hide
 import com.woocommerce.android.extensions.show
 import com.woocommerce.android.model.toAppModel
-import com.woocommerce.android.widgets.AppRatingDialog
+import com.woocommerce.android.util.AddressUtils
+import com.woocommerce.android.util.PhoneUtils
 import kotlinx.android.synthetic.main.order_detail_customer_info.view.*
 import org.wordpress.android.fluxc.model.WCOrderModel
 
@@ -86,9 +85,9 @@ class OrderDetailCustomerInfoView @JvmOverloads constructor(
                 customerInfo_emailAddr.visibility = View.VISIBLE
                 customerInfo_emailBtn.visibility = View.VISIBLE
                 customerInfo_emailBtn.setOnClickListener {
-                    AnalyticsTracker.track(Stat.ORDER_DETAIL_CUSTOMER_INFO_EMAIL_MENU_EMAIL_TAPPED)
-                    OrderCustomerHelper.createEmail(context, order, order.billingEmail)
-                    AppRatingDialog.incrementInteractions()
+//                    AnalyticsTracker.track(Stat.ORDER_DETAIL_CUSTOMER_INFO_EMAIL_MENU_EMAIL_TAPPED)
+//                    OrderCustomerHelper.createEmail(context, order, order.billingEmail)
+//                    AppRatingDialog.incrementInteractions()
                 }
             } else {
                 customerInfo_emailAddr.visibility = View.GONE
@@ -162,15 +161,15 @@ class OrderDetailCustomerInfoView @JvmOverloads constructor(
 
         popup.menu.findItem(R.id.menu_call)?.setOnMenuItemClickListener {
             AnalyticsTracker.track(Stat.ORDER_DETAIL_CUSTOMER_INFO_PHONE_MENU_PHONE_TAPPED)
-            OrderCustomerHelper.dialPhone(context, order, order.billingPhone)
-            AppRatingDialog.incrementInteractions()
+//            OrderCustomerHelper.dialPhone(context, order, order.billingPhone)
+//            AppRatingDialog.incrementInteractions()
             true
         }
 
         popup.menu.findItem(R.id.menu_message)?.setOnMenuItemClickListener {
             AnalyticsTracker.track(Stat.ORDER_DETAIL_CUSTOMER_INFO_PHONE_MENU_SMS_TAPPED)
-            OrderCustomerHelper.sendSms(context, order, order.billingPhone)
-            AppRatingDialog.incrementInteractions()
+//            OrderCustomerHelper.sendSms(context, order, order.billingPhone)
+//            AppRatingDialog.incrementInteractions()
             true
         }
 
