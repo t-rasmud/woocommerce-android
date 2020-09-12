@@ -9,8 +9,6 @@ import com.woocommerce.android.ui.orders.notes.AddOrderNoteContract.View
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode.MAIN
 import org.wordpress.android.fluxc.Dispatcher
-import org.wordpress.android.fluxc.generated.WCOrderActionBuilder
-import org.wordpress.android.fluxc.model.WCOrderNoteModel
 import org.wordpress.android.fluxc.model.order.OrderIdentifier
 import org.wordpress.android.fluxc.store.WCOrderStore
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderChanged
@@ -55,12 +53,12 @@ class AddOrderNotePresenter @Inject constructor(
         }
         AnalyticsTracker.track(ORDER_NOTE_ADD, mapOf(AnalyticsTracker.KEY_PARENT_ID to order.remoteOrderId))
 
-        val noteModel = WCOrderNoteModel()
-        noteModel.isCustomerNote = isCustomerNote
-        noteModel.note = noteText
+//        val noteModel = WCOrderNoteModel()
+//        noteModel.isCustomerNote = isCustomerNote
+//        noteModel.note = noteText
 
-        val payload = WCOrderStore.PostOrderNotePayload(order, selectedSite.get(), noteModel)
-        dispatcher.dispatch(WCOrderActionBuilder.newPostOrderNoteAction(payload))
+//        val payload = WCOrderStore.PostOrderNotePayload(order, selectedSite.get(), noteModel)
+//        dispatcher.dispatch(WCOrderActionBuilder.newPostOrderNoteAction(payload))
 
         addNoteView?.showAddOrderNoteSnack()
         return true

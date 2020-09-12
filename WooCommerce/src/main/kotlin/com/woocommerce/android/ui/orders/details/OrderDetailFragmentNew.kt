@@ -25,6 +25,7 @@ import com.woocommerce.android.model.ShippingLabel
 import com.woocommerce.android.tools.ProductImageMap
 import com.woocommerce.android.ui.base.BaseFragment
 import com.woocommerce.android.ui.base.UIMessageResolver
+import com.woocommerce.android.ui.orders.notes.AddOrderNoteFragment
 import com.woocommerce.android.util.CurrencyFormatter
 import com.woocommerce.android.viewmodel.MultiLiveEvent.Event.ShowSnackbar
 import com.woocommerce.android.viewmodel.MultiLiveEvent.Event.ShowUndoSnackbar
@@ -125,6 +126,9 @@ class OrderDetailFragmentNew : BaseFragment() {
     private fun setupResultHandlers(viewModel: OrderDetailViewModelNew) {
         handleResult<String>(OrderStatusSelectorDialog.KEY_ORDER_STATUS_RESULT) {
             viewModel.onOrderStatusChanged(it)
+        }
+        handleResult<OrderNote>(AddOrderNoteFragment.KEY_ADD_NOTE_RESULT) {
+            viewModel.onNewOrderNoteAdded(it)
         }
     }
 
