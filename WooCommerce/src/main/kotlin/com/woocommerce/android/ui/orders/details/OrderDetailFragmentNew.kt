@@ -160,7 +160,9 @@ class OrderDetailFragmentNew : BaseFragment() {
     }
 
     private fun showOrderNotes(orderNotes: List<OrderNote>) {
-        orderDetail_noteList.updateOrderNotesView(orderNotes)
+        orderDetail_noteList.updateOrderNotesView(orderNotes) {
+            viewModel.onAddOrderNoteClicked()
+        }
     }
 
     private fun showOrderRefunds(refunds: List<Refund>) {
