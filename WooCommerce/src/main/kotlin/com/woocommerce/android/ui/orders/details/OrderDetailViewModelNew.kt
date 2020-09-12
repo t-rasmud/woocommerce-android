@@ -26,6 +26,7 @@ import com.woocommerce.android.model.loadProducts
 import com.woocommerce.android.tools.NetworkStatus
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.IssueOrderRefund
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.ViewOrderStatusSelector
+import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.ViewRefundedProducts
 import com.woocommerce.android.util.CoroutineDispatchers
 import com.woocommerce.android.util.FeatureFlag
 import com.woocommerce.android.viewmodel.LiveDataDelegate
@@ -106,6 +107,10 @@ class OrderDetailViewModelNew @AssistedInject constructor(
 
     fun onIssueOrderRefundClicked() {
         order?.let { triggerEvent(IssueOrderRefund(remoteOrderId = it.remoteId)) }
+    }
+
+    fun onViewRefundedProductsClicked() {
+        order?.let { triggerEvent(ViewRefundedProducts(remoteOrderId = it.remoteId)) }
     }
 
     fun onEditOrderStatusSelected() {

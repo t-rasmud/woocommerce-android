@@ -168,7 +168,9 @@ class OrderDetailFragmentNew : BaseFragment() {
         val refundsCount = refunds.sumBy { refund -> refund.items.sumBy { it.quantity } }
         if (refundsCount > 0) {
             orderDetail_refundsInfo.show()
-            orderDetail_refundsInfo.updateRefundCount(refundsCount)
+            orderDetail_refundsInfo.updateRefundCount(refundsCount) {
+                viewModel.onViewRefundedProductsClicked()
+            }
         } else {
             orderDetail_refundsInfo.hide()
         }
