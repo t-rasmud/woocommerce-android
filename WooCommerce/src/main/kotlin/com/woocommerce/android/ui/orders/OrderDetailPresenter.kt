@@ -60,7 +60,6 @@ import org.wordpress.android.fluxc.store.WCOrderStore.FetchOrderStatusOptionsPay
 import org.wordpress.android.fluxc.store.WCOrderStore.FetchSingleOrderPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderChanged
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderStatusOptionsChanged
-import org.wordpress.android.fluxc.store.WCOrderStore.UpdateOrderStatusPayload
 import org.wordpress.android.fluxc.store.WCProductStore
 import org.wordpress.android.fluxc.store.WCProductStore.OnProductChanged
 import javax.inject.Inject
@@ -274,10 +273,10 @@ class OrderDetailPresenter @Inject constructor(
             return
         }
 
-        orderModel?.let { order ->
-            val payload = UpdateOrderStatusPayload(order, selectedSite.get(), newStatus)
-            dispatcher.dispatch(WCOrderActionBuilder.newUpdateOrderStatusAction(payload))
-        }
+//        orderModel?.let { order ->
+//            val payload = UpdateOrderStatusPayload(order, selectedSite.get(), newStatus)
+//            dispatcher.dispatch(WCOrderActionBuilder.newUpdateOrderStatusAction(payload))
+//        }
     }
 
     /**
