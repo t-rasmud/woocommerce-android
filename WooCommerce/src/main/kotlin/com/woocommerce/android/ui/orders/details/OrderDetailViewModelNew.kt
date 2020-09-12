@@ -24,6 +24,7 @@ import com.woocommerce.android.model.getNonRefundedProducts
 import com.woocommerce.android.model.hasNonRefundedProducts
 import com.woocommerce.android.model.loadProducts
 import com.woocommerce.android.tools.NetworkStatus
+import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.IssueOrderRefund
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.ViewOrderStatusSelector
 import com.woocommerce.android.util.CoroutineDispatchers
 import com.woocommerce.android.util.FeatureFlag
@@ -101,6 +102,10 @@ class OrderDetailViewModelNew @AssistedInject constructor(
             val remoteProductIds = lineItems.map { it.productId }
             orderDetailRepository.getProductsByRemoteIds(remoteProductIds).any { it.virtual }
         } ?: false
+    }
+
+    fun onIssueOrderRefundClicked() {
+        order?.let { triggerEvent(IssueOrderRefund(remoteOrderId = it.remoteId)) }
     }
 
     fun onEditOrderStatusSelected() {

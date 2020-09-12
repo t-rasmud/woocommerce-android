@@ -137,7 +137,8 @@ class OrderDetailFragmentNew : BaseFragment() {
         )
         orderDetail_paymentInfo.updatePaymentInfo(
             order = order,
-            formatCurrencyForDisplay = currencyFormatter.buildBigDecimalFormatter(order.currency)
+            formatCurrencyForDisplay = currencyFormatter.buildBigDecimalFormatter(order.currency),
+            onIssueRefundClickListener = { viewModel.onIssueOrderRefundClicked() }
         )
     }
 
