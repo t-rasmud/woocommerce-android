@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import com.google.android.material.snackbar.Snackbar
 import com.squareup.inject.assisted.Assisted
 import com.squareup.inject.assisted.AssistedInject
+import com.woocommerce.android.AppPrefsWrapper
 import com.woocommerce.android.R.string
 import com.woocommerce.android.analytics.AnalyticsTracker
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat
@@ -25,6 +26,7 @@ import com.woocommerce.android.model.hasNonRefundedProducts
 import com.woocommerce.android.model.loadProducts
 import com.woocommerce.android.tools.NetworkStatus
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.AddOrderNote
+import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.AddOrderShipmentTracking
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.IssueOrderRefund
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.RefundShippingLabel
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.ViewOrderStatusSelector
@@ -48,6 +50,7 @@ class OrderDetailViewModelNew @AssistedInject constructor(
     @Assisted savedState: SavedStateWithArgs,
     dispatchers: CoroutineDispatchers,
     private val networkStatus: NetworkStatus,
+    private val appPrefsWrapper: AppPrefsWrapper,
     private val resourceProvider: ResourceProvider,
     private val orderDetailRepository: OrderDetailRepositoryNew
 ) : ScopedViewModel(savedState, dispatchers) {
@@ -123,6 +126,16 @@ class OrderDetailViewModelNew @AssistedInject constructor(
         order?.let { triggerEvent(RefundShippingLabel(remoteOrderId = it.remoteId, shippingLabelId = shippingLabelId)) }
     }
 
+    fun onAddShipmentTrackingClicked() {
+        order?.let {
+            triggerEvent(AddOrderShipmentTracking(
+                orderIdentifier = it.identifier,
+                orderTrackingProvider = appPrefsWrapper.selectedShipmentProviderName,
+                isCustomProvider = appPrefsWrapper.isSelectedShipmentTrackingProviderCustom
+            ))
+        }
+    }
+
     fun onEditOrderStatusSelected() {
         order?.let { order ->
             triggerEvent(ViewOrderStatusSelector(
@@ -170,6 +183,31 @@ class OrderDetailViewModelNew @AssistedInject constructor(
                     triggerEvent(ShowSnackbar(string.add_order_note_error))
                     orderNotes.remove(orderNote)
                     _orderNotes.value = orderNotes
+                }
+            }
+        } else {
+            triggerEvent(ShowSnackbar(string.offline_error))
+        }
+    }
+
+    fun onNewShipmentTrackingAdded(shipmentTracking: OrderShipmentTracking) {
+        if (networkStatus.isConnected()) {
+            val shipmentTrackings = _shipmentTrackings.value?.toMutableList() ?: mutableListOf()
+            shipmentTrackings.add(0, shipmentTracking)
+            _shipmentTrackings.value = shipmentTrackings
+
+            triggerEvent(ShowSnackbar(string.order_shipment_tracking_added))
+            launch {
+                val addedShipmentTracking = orderDetailRepository.addOrderShipmentTracking(
+                        orderIdSet.id,
+                        orderIdSet.remoteOrderId,
+                        shipmentTracking.toDataModel(),
+                        shipmentTracking.isCustomProvider
+                    )
+                if (!addedShipmentTracking) {
+                    triggerEvent(ShowSnackbar(string.order_shipment_tracking_error))
+                    shipmentTrackings.remove(shipmentTracking)
+                    _shipmentTrackings.value = shipmentTrackings
                 }
             }
         } else {

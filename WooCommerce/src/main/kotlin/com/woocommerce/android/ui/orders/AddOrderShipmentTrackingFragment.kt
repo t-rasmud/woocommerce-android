@@ -14,6 +14,8 @@ import com.woocommerce.android.AppPrefs
 import com.woocommerce.android.R
 import com.woocommerce.android.analytics.AnalyticsTracker
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat.ORDER_SHIPMENT_TRACKING_ADD_BUTTON_TAPPED
+import com.woocommerce.android.extensions.navigateBackWithResult
+import com.woocommerce.android.model.OrderShipmentTracking
 import com.woocommerce.android.tools.NetworkStatus
 import com.woocommerce.android.ui.base.BaseFragment
 import com.woocommerce.android.ui.base.UIMessageResolver
@@ -39,6 +41,7 @@ class AddOrderShipmentTrackingFragment : BaseFragment(), AddOrderShipmentTrackin
         const val FIELD_IS_CUSTOM_PROVIDER = "is-custom-provider"
         const val FIELD_ORDER_TRACKING_CUSTOM_PROVIDER_NAME = "order-tracking-custom-provider-name"
         const val FIELD_ORDER_TRACKING_CUSTOM_PROVIDER_URL = "order-tracking-custom-provider-url"
+        const val KEY_ADD_SHIPMENT_TRACKING_RESULT = "key_add_shipment_tracking_result"
     }
 
     @Inject lateinit var networkStatus: NetworkStatus
@@ -124,7 +127,7 @@ class AddOrderShipmentTrackingFragment : BaseFragment(), AddOrderShipmentTrackin
                             listener = this,
                             selectedProviderText = addTracking_editCarrier.text.toString(),
                             orderIdentifier = orderId)
-                    .also { it.show(requireFragmentManager(), AddOrderTrackingProviderListFragment.TAG) }
+                    .also { it.show(parentFragmentManager, AddOrderTrackingProviderListFragment.TAG) }
         }
     }
 
@@ -209,14 +212,16 @@ class AddOrderShipmentTrackingFragment : BaseFragment(), AddOrderShipmentTrackin
                 orderShipmentTrackingModel.trackingNumber = trackingNumText
                 orderShipmentTrackingModel.dateShipped = getDateShippedText()
                 orderShipmentTrackingModel.trackingProvider = providerText
-                if (isCustomProvider) {
-                    orderShipmentTrackingModel.trackingLink = customProviderTrackingUrl
-                }
 
-                if (presenter.pushShipmentTrackingRecord(orderId, orderShipmentTrackingModel, isCustomProvider)) {
-                    shouldShowDiscardDialog = false
-                    activity?.onBackPressed()
-                }
+                val shipmentTracking = OrderShipmentTracking(
+                    trackingNumber = trackingNumText,
+                    dateShipped = getDateShippedText(),
+                    trackingProvider = providerText,
+                    trackingLink = if (isCustomProvider) { customProviderTrackingUrl } else ""
+                )
+
+                shouldShowDiscardDialog = false
+                navigateBackWithResult(KEY_ADD_SHIPMENT_TRACKING_RESULT, shipmentTracking)
                 true
             }
             else -> super.onOptionsItemSelected(item)

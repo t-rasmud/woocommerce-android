@@ -7,12 +7,10 @@ import com.woocommerce.android.tools.SelectedSite
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode.MAIN
 import org.wordpress.android.fluxc.Dispatcher
-import org.wordpress.android.fluxc.generated.WCOrderActionBuilder
 import org.wordpress.android.fluxc.model.WCOrderModel
 import org.wordpress.android.fluxc.model.WCOrderShipmentTrackingModel
 import org.wordpress.android.fluxc.model.order.OrderIdentifier
 import org.wordpress.android.fluxc.store.WCOrderStore
-import org.wordpress.android.fluxc.store.WCOrderStore.AddOrderShipmentTrackingPayload
 import org.wordpress.android.fluxc.store.WCOrderStore.OnOrderChanged
 import javax.inject.Inject
 
@@ -69,12 +67,12 @@ class AddOrderShipmentTrackingPresenter @Inject constructor(
                         AnalyticsTracker.KEY_CARRIER to wcOrderShipmentTrackingModel.trackingProvider)
         )
 
-        val payload = AddOrderShipmentTrackingPayload(
-                selectedSite.get(), order, wcOrderShipmentTrackingModel, isCustomProvider
-        )
-        dispatcher.dispatch(WCOrderActionBuilder.newAddOrderShipmentTrackingAction(payload))
-
-        addTrackingView?.showAddShipmentTrackingSnack()
+//        val payload = AddOrderShipmentTrackingPayload(
+//                selectedSite.get(), order, wcOrderShipmentTrackingModel, isCustomProvider
+//        )
+//        dispatcher.dispatch(WCOrderActionBuilder.newAddOrderShipmentTrackingAction(payload))
+//
+//        addTrackingView?.showAddShipmentTrackingSnack()
         return true
     }
 

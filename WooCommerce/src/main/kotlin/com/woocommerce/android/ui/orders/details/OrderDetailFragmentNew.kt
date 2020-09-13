@@ -25,6 +25,7 @@ import com.woocommerce.android.model.ShippingLabel
 import com.woocommerce.android.tools.ProductImageMap
 import com.woocommerce.android.ui.base.BaseFragment
 import com.woocommerce.android.ui.base.UIMessageResolver
+import com.woocommerce.android.ui.orders.AddOrderShipmentTrackingFragment
 import com.woocommerce.android.ui.orders.notes.AddOrderNoteFragment
 import com.woocommerce.android.ui.orders.shippinglabels.ShippingLabelRefundFragment
 import com.woocommerce.android.util.CurrencyFormatter
@@ -93,8 +94,7 @@ class OrderDetailFragmentNew : BaseFragment() {
                 orderRefreshLayout.isRefreshing = it
             }
             new.isShipmentTrackingAvailable?.takeIfNotEqualTo(old?.isShipmentTrackingAvailable) {
-                orderDetail_shipmentList.isVisible = it
-                orderDetail_shipmentList.showAddTrackingButton(it)
+                showAddShipmentTracking(it)
             }
         }
         viewModel.orderNotes.observe(viewLifecycleOwner, Observer {
@@ -133,6 +133,9 @@ class OrderDetailFragmentNew : BaseFragment() {
         }
         handleResult<Boolean>(ShippingLabelRefundFragment.KEY_REFUND_SHIPPING_LABEL_RESULT) {
             viewModel.onShippingLabelRefunded()
+        }
+        handleResult<OrderShipmentTracking>(AddOrderShipmentTrackingFragment.KEY_ADD_SHIPMENT_TRACKING_RESULT) {
+            viewModel.onNewShipmentTrackingAdded(it)
         }
     }
 
@@ -213,6 +216,13 @@ class OrderDetailFragmentNew : BaseFragment() {
                 showOrderFulfillOption(order.status == CoreOrderStatus.PROCESSING)
             }
         }.otherwise { orderDetail_productList.hide() }
+    }
+
+    private fun showAddShipmentTracking(show: Boolean) {
+        with(orderDetail_shipmentList) {
+            isVisible = show
+            showAddTrackingButton(show) { viewModel.onAddShipmentTrackingClicked() }
+        }
     }
 
     private fun showShipmentTrackings(shipmentTrackings: List<OrderShipmentTracking>) {
