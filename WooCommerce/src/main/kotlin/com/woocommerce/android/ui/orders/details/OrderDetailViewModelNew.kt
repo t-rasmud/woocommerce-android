@@ -26,6 +26,7 @@ import com.woocommerce.android.model.loadProducts
 import com.woocommerce.android.tools.NetworkStatus
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.AddOrderNote
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.IssueOrderRefund
+import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.RefundShippingLabel
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.ViewOrderStatusSelector
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.ViewRefundedProducts
 import com.woocommerce.android.util.CoroutineDispatchers
@@ -118,6 +119,10 @@ class OrderDetailViewModelNew @AssistedInject constructor(
         order?.let { triggerEvent(AddOrderNote(orderIdentifier = it.identifier, orderNumber = it.number)) }
     }
 
+    fun onRefundShippingLabelClick(shippingLabelId: Long) {
+        order?.let { triggerEvent(RefundShippingLabel(remoteOrderId = it.remoteId, shippingLabelId = shippingLabelId)) }
+    }
+
     fun onEditOrderStatusSelected() {
         order?.let { order ->
             triggerEvent(ViewOrderStatusSelector(
@@ -171,6 +176,8 @@ class OrderDetailViewModelNew @AssistedInject constructor(
             triggerEvent(ShowSnackbar(string.offline_error))
         }
     }
+
+    fun onShippingLabelRefunded() { launch { loadOrderShippingLabels() } }
 
     private fun updateOrderStatus(newStatus: String) {
         if (networkStatus.isConnected()) {

@@ -5,6 +5,7 @@ import androidx.navigation.fragment.findNavController
 import com.woocommerce.android.extensions.navigateSafely
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.AddOrderNote
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.IssueOrderRefund
+import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.RefundShippingLabel
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.ViewOrderStatusSelector
 import com.woocommerce.android.ui.orders.details.OrderNavigationTarget.ViewRefundedProducts
 import javax.inject.Inject
@@ -34,6 +35,13 @@ class OrderNavigator @Inject constructor() {
             is AddOrderNote -> {
                 val action = OrderDetailFragmentNewDirections
                     .actionOrderDetailFragmentToAddOrderNoteFragment(target.orderIdentifier, target.orderNumber)
+                fragment.findNavController().navigateSafely(action)
+            }
+            is RefundShippingLabel -> {
+                val action = OrderDetailFragmentNewDirections
+                    .actionOrderDetailFragmentToOrderShippingLabelRefundFragment(
+                        target.remoteOrderId, target.shippingLabelId
+                    )
                 fragment.findNavController().navigateSafely(action)
             }
         }

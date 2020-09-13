@@ -26,6 +26,7 @@ import com.woocommerce.android.tools.ProductImageMap
 import com.woocommerce.android.ui.base.BaseFragment
 import com.woocommerce.android.ui.base.UIMessageResolver
 import com.woocommerce.android.ui.orders.notes.AddOrderNoteFragment
+import com.woocommerce.android.ui.orders.shippinglabels.ShippingLabelRefundFragment
 import com.woocommerce.android.util.CurrencyFormatter
 import com.woocommerce.android.viewmodel.MultiLiveEvent.Event.ShowSnackbar
 import com.woocommerce.android.viewmodel.MultiLiveEvent.Event.ShowUndoSnackbar
@@ -130,6 +131,9 @@ class OrderDetailFragmentNew : BaseFragment() {
         handleResult<OrderNote>(AddOrderNoteFragment.KEY_ADD_NOTE_RESULT) {
             viewModel.onNewOrderNoteAdded(it)
         }
+        handleResult<Boolean>(ShippingLabelRefundFragment.KEY_REFUND_SHIPPING_LABEL_RESULT) {
+            viewModel.onShippingLabelRefunded()
+        }
     }
 
     private fun showOrderDetail(order: Order) {
@@ -226,7 +230,9 @@ class OrderDetailFragmentNew : BaseFragment() {
                     shippingLabels = shippingLabels,
                     productImageMap = productImageMap,
                     formatCurrencyForDisplay = currencyFormatter.buildBigDecimalFormatter(order.currency)
-                )
+                ) {
+                    viewModel.onRefundShippingLabelClick(it.id)
+                }
             }
         }.otherwise { orderDetail_shippingLabelList.hide() }
     }
