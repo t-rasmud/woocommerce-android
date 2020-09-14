@@ -225,16 +225,6 @@ class OrderDetailViewModelNew @AssistedInject constructor(
 
     fun onDeleteShipmentTrackingClicked(trackingNumber: String) {
         if (networkStatus.isConnected()) {
-            // Add the tracking number to a deletion set
-            // fetch the shipment tracking model from the local db
-            // remove the tracking number from the shipment tracking list
-            // display snackbar with undo option
-            // if undo is selected:
-            //      revert the deletion and add the item back to the list
-            //      Remove the item from the deletion set
-            // if undo NOT selected:
-            //      Call API to delete the shipment tracking
-            //      Remove the item from the deletion set
             orderDetailRepository.getOrderShipmentTrackingByTrackingNumber(
                 orderIdSet.id, trackingNumber
             )?.let { deletedShipmentTracking ->

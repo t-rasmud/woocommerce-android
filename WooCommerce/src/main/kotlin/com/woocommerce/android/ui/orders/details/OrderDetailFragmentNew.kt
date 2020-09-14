@@ -11,6 +11,7 @@ import androidx.lifecycle.Observer
 import com.google.android.material.snackbar.Snackbar
 import com.woocommerce.android.R
 import com.woocommerce.android.analytics.AnalyticsTracker
+import com.woocommerce.android.analytics.AnalyticsTracker.Stat
 import com.woocommerce.android.extensions.handleResult
 import com.woocommerce.android.extensions.hide
 import com.woocommerce.android.extensions.show
@@ -157,6 +158,10 @@ class OrderDetailFragmentNew : BaseFragment() {
         orderDetail_orderStatus.updateStatus(orderStatus) {
             viewModel.onEditOrderStatusSelected()
         }
+        orderDetail_productList.showOrderFulfillOption(orderStatus.statusKey == CoreOrderStatus.PROCESSING.value) {
+            AnalyticsTracker.track(Stat.ORDER_DETAIL_FULFILL_ORDER_BUTTON_TAPPED)
+            viewModel.onOrderStatusChanged(CoreOrderStatus.COMPLETED.value)
+        }
     }
 
     private fun showSkeleton(show: Boolean) {
@@ -213,7 +218,6 @@ class OrderDetailFragmentNew : BaseFragment() {
                     productImageMap = productImageMap,
                     formatCurrencyForDisplay = currencyFormatter.buildBigDecimalFormatter(order.currency)
                 )
-                showOrderFulfillOption(order.status == CoreOrderStatus.PROCESSING)
             }
         }.otherwise { orderDetail_productList.hide() }
     }
