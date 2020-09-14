@@ -80,6 +80,9 @@ class OrderDetailViewModelNew @AssistedInject constructor(
     val order: Order?
     get() = orderDetailViewState.order
 
+    val toolbarTitle: String
+        get() = orderDetailViewState.toolbarTitle ?: ""
+
     // Keep track of the deleted shipment tracking number in case
     // the request to server fails, we need to display an error message
     // and add the deleted tracking number back to the list
