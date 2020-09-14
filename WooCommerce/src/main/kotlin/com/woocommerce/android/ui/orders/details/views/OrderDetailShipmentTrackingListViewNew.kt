@@ -21,10 +21,13 @@ class OrderDetailShipmentTrackingListViewNew @JvmOverloads constructor(
         View.inflate(context, R.layout.order_detail_shipment_tracking_list, this)
     }
 
-    fun updateShipmentTrackingList(shipmentTrackings: List<OrderShipmentTracking>) {
+    fun updateShipmentTrackingList(
+        shipmentTrackings: List<OrderShipmentTracking>,
+        onDeleteShipmentTrackingClicked: (trackingNumber: String) -> Unit
+    ) {
         val shipmentTrackingAdapter =
             shipmentTrack_items.adapter as? OrderDetailShipmentTrackingListAdapterNew
-            ?: OrderDetailShipmentTrackingListAdapterNew()
+            ?: OrderDetailShipmentTrackingListAdapterNew(onDeleteShipmentTrackingClicked)
 
         shipmentTrack_items.apply {
             setHasFixedSize(true)
