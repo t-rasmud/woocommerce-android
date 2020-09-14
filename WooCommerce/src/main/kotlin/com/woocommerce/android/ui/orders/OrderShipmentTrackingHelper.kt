@@ -41,7 +41,7 @@ object OrderShipmentTrackingHelper {
         context: Context,
         trackingLink: String,
         trackingNumber: String,
-        onDeleteTrackingClicked: (trackingNumber: String) -> Unit
+        onDeleteTrackingClicked: ((trackingNumber: String) -> Unit?)? = null
     ) {
         val popup = PopupMenu(context, anchor)
         popup.menuInflater.inflate(R.menu.menu_order_detail_shipment_tracking_actions, popup.menu)
@@ -59,10 +59,15 @@ object OrderShipmentTrackingHelper {
             true
         }
 
-        popup.menu.findItem(R.id.menu_delete_shipment)?.setOnMenuItemClickListener {
-            onDeleteTrackingClicked(trackingNumber)
-            AppRatingDialog.incrementInteractions()
-            true
+        onDeleteTrackingClicked?.let {
+            with(popup.menu.findItem(R.id.menu_delete_shipment)) {
+            isVisible = true
+                setOnMenuItemClickListener {
+                    onDeleteTrackingClicked(trackingNumber)
+                    AppRatingDialog.incrementInteractions()
+                    true
+                }
+            }
         }
         popup.show()
     }

@@ -142,7 +142,7 @@ class OrderDetailShippingLabelListView @JvmOverloads constructor(
                             shippingLabel.refund.refundDate?.formatToMMMddYYYYhhmm() ?: ""
                         )
                     )
-                    itemView.shippingLabelItem_trackingNumber.showTrackingLinkButton(false)
+                    itemView.shippingLabelItem_trackingNumber.showTrackingItemButton(false)
                     itemView.shippingLabelList_btnMenu.visibility = View.GONE
                 } else {
                     itemView.shippingLabelItem_trackingNumber.setShippingLabelTitle(context.getString(
@@ -155,12 +155,12 @@ class OrderDetailShippingLabelListView @JvmOverloads constructor(
                     }
 
                     shippingLabel.trackingLink?.let {
-                        itemView.shippingLabelItem_trackingNumber.showTrackingLinkButton(true)
-                        itemView.shippingLabelItem_trackingNumber.setTrackingLinkClickListener {
+                        itemView.shippingLabelItem_trackingNumber.showTrackingItemButton(true)
+                        itemView.shippingLabelItem_trackingNumber.setTrackingItemClickListener {
                             ChromeCustomTabUtils.launchUrl(context, it)
                             AppRatingDialog.incrementInteractions()
                         }
-                    } ?: itemView.shippingLabelItem_trackingNumber.showTrackingLinkButton(false)
+                    } ?: itemView.shippingLabelItem_trackingNumber.showTrackingItemButton(false)
                 }
 
                 itemView.shippingLabelItem_packageInfo.setShippingLabelValue(shippingLabel.packageName)
