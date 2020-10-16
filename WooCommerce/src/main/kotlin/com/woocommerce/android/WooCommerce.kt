@@ -3,13 +3,16 @@ package com.woocommerce.android
 import android.content.Context
 import android.content.IntentFilter
 import android.net.ConnectivityManager
+import android.os.Bundle
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode.VmPolicy
 import androidx.multidex.MultiDexApplication
 import com.android.volley.VolleyLog
+import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.common.api.GoogleApiClient
 import com.idescout.sql.SqlScoutServer
 import com.woocommerce.android.analytics.AnalyticsTracker
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat
@@ -76,6 +79,7 @@ open class WooCommerce : MultiDexApplication(), HasAndroidInjector, ApplicationL
     @Inject lateinit var prefs: AppPrefs
 
     private var connectionReceiverRegistered = false
+    private var credentialsClient: GoogleApiClient? = null
 
     open val component: AppComponent by lazy {
         DaggerAppComponent.builder()
@@ -154,6 +158,16 @@ open class WooCommerce : MultiDexApplication(), HasAndroidInjector, ApplicationL
                 this, BuildConfig.ZENDESK_DOMAIN, BuildConfig.ZENDESK_APP_ID,
                 BuildConfig.ZENDESK_OAUTH_CLIENT_ID
         )
+
+        // Setup the Credentials Client so we can clean it up on logout
+        credentialsClient = GoogleApiClient.Builder(this)
+            .addConnectionCallbacks(object : GoogleApiClient.ConnectionCallbacks {
+                override fun onConnected(bundle: Bundle?) {}
+                override fun onConnectionSuspended(i: Int) {}
+            })
+            .addApi(Auth.CREDENTIALS_API)
+            .build()
+        credentialsClient?.connect()
     }
 
     /**
@@ -299,6 +313,11 @@ open class WooCommerce : MultiDexApplication(), HasAndroidInjector, ApplicationL
 
             // Wipe user-specific preferences
             prefs.reset()
+
+            // Clear Credentials Client
+            credentialsClient?.takeIf { it.isConnected }?.let { apiClient ->
+                Auth.CredentialsApi.disableAutoSignIn(apiClient)
+            }
         } else if (event.causeOfChange == AccountAction.FETCH_SETTINGS) {
             // make sure local usage tracking matches the account setting
             val hasUserOptedOut = !AnalyticsTracker.sendUsageStats
