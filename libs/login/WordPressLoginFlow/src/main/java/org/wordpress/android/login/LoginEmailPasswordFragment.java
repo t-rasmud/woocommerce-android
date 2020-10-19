@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -250,6 +251,13 @@ public class LoginEmailPasswordFragment extends LoginBaseFormFragment<LoginListe
 
             if (!TextUtils.isEmpty(mPassword)) {
                 mPasswordInput.setText(mPassword);
+
+                getPrimaryButton().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        getPrimaryButton().performClick();
+                    }
+                });
             } else {
                 if (BuildConfig.DEBUG) {
                     mPasswordInput.getEditText().setText(BuildConfig.DEBUG_WPCOM_LOGIN_PASSWORD);
@@ -257,6 +265,8 @@ public class LoginEmailPasswordFragment extends LoginBaseFormFragment<LoginListe
             }
         } else {
             mOldSitesIDs = savedInstanceState.getIntegerArrayList(KEY_OLD_SITES_IDS);
+
+
         }
     }
 
@@ -332,6 +342,8 @@ public class LoginEmailPasswordFragment extends LoginBaseFormFragment<LoginListe
     @SuppressWarnings("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onCredentialsOK(OnCredentialsOK event) {
+        Log.d("AMANDA-TEST", "onCredentialsOK! " + mEmailAddress + ", " + mRequestedPassword);
+
         saveCredentialsInSmartLock(mLoginListener, mEmailAddress, mRequestedPassword);
     }
 

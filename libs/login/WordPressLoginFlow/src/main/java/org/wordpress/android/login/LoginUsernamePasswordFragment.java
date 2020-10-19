@@ -566,7 +566,7 @@ public class LoginUsernamePasswordFragment extends LoginBaseDiscoveryFragment im
         mLoginFinished = true;
 
         if (mLoginListener != null) {
-            if (mIsWpcom) {
+            if (mIsWpcom && mLoginListener.getLoginMode() != LoginMode.WOO_LOGIN_MODE) {
                 saveCredentialsInSmartLock(mLoginListener, mRequestedUsername, mRequestedPassword);
             }
 

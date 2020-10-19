@@ -8,17 +8,26 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.automattic.android.tracks.CrashLogging.CrashLogging
+import com.google.android.gms.auth.api.credentials.Credential
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.woocommerce.android.AppPrefs
 import com.woocommerce.android.AppUrls
 import com.woocommerce.android.R
+import com.woocommerce.android.RequestCodes
 import com.woocommerce.android.analytics.AnalyticsTracker
 import com.woocommerce.android.analytics.AnalyticsTracker.Stat
 import com.woocommerce.android.support.HelpActivity
 import com.woocommerce.android.support.HelpActivity.Origin
 import com.woocommerce.android.support.ZendeskExtraTags
 import com.woocommerce.android.support.ZendeskHelper
+import com.woocommerce.android.ui.login.LoginActivity.SmartLockHelperState.FINISHED
+import com.woocommerce.android.ui.login.LoginActivity.SmartLockHelperState.FINISH_ON_CONNECT
+import com.woocommerce.android.ui.login.LoginActivity.SmartLockHelperState.NOT_TRIGGERED
+import com.woocommerce.android.ui.login.LoginActivity.SmartLockHelperState.TRIGGER_FILL_IN_ON_CONNECT
 import com.woocommerce.android.ui.login.LoginPrologueFragment.PrologueFinishedListener
 import com.woocommerce.android.ui.login.UnifiedLoginTracker.Click
 import com.woocommerce.android.ui.login.UnifiedLoginTracker.Flow
@@ -28,6 +37,8 @@ import com.woocommerce.android.ui.login.UnifiedLoginTracker.Step.ENTER_SITE_ADDR
 import com.woocommerce.android.ui.main.MainActivity
 import com.woocommerce.android.util.ActivityUtils
 import com.woocommerce.android.util.ChromeCustomTabUtils
+import com.woocommerce.android.util.WooLog
+import com.woocommerce.android.util.WooLog.T
 import dagger.android.AndroidInjection
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -50,13 +61,15 @@ import org.wordpress.android.login.LoginMode
 import org.wordpress.android.login.LoginSiteAddressFragment
 import org.wordpress.android.login.LoginUsernamePasswordFragment
 import org.wordpress.android.util.ToastUtils
+import java.lang.RuntimeException
 import java.util.ArrayList
 import javax.inject.Inject
 import kotlin.text.RegexOption.IGNORE_CASE
 
 @Suppress("SameParameterValue")
 class LoginActivity : AppCompatActivity(), LoginListener, GoogleListener, PrologueFinishedListener,
-        HasAndroidInjector, LoginNoJetpackListener, LoginEmailHelpDialogFragment.Listener {
+        HasAndroidInjector, LoginNoJetpackListener, LoginEmailHelpDialogFragment.Listener, ConnectionCallbacks,
+        OnConnectionFailedListener, SmartLockHelper.Callback {
     companion object {
         private const val FORGOT_PASSWORD_URL_SUFFIX = "wp-login.php?action=lostpassword"
         private const val MAGIC_LOGIN = "magic-login"
@@ -72,6 +85,16 @@ class LoginActivity : AppCompatActivity(), LoginListener, GoogleListener, Prolog
     @Inject internal lateinit var zendeskHelper: ZendeskHelper
 
     private var loginMode: LoginMode? = null
+    private var smartLockHelper: SmartLockHelper? = null
+    private var smartLockHelperState = SmartLockHelperState.NOT_TRIGGERED
+    private var isSmartLockTriggeredFromPrologue = false
+
+    enum class SmartLockHelperState {
+        NOT_TRIGGERED,
+        TRIGGER_FILL_IN_ON_CONNECT,
+        FINISH_ON_CONNECT,
+        FINISHED
+    }
 
     override fun androidInjector(): AndroidInjector<Any> = androidInjector
 
@@ -92,6 +115,8 @@ class LoginActivity : AppCompatActivity(), LoginListener, GoogleListener, Prolog
             unifiedLoginTracker.setSource(ss.getString(KEY_UNIFIED_TRACKER_SOURCE, Source.DEFAULT.value))
             unifiedLoginTracker.setFlow(ss.getString(KEY_UNIFIED_TRACKER_FLOW))
         }
+
+        checkSmartLockPasswordAndStartLogin()
     }
 
     override fun onResume() {
@@ -231,6 +256,11 @@ class LoginActivity : AppCompatActivity(), LoginListener, GoogleListener, Prolog
         val loginUsernamePasswordFragment = LoginUsernamePasswordFragment.newInstance(
                 "wordpress.com", "wordpress.com", username, password, true)
         slideInFragment(loginUsernamePasswordFragment, true, LoginUsernamePasswordFragment.TAG)
+    }
+
+    private fun jumpToEmailPassword(email: String, password: String?) {
+        val loginEmailPasswordFragment = LoginEmailPasswordFragment.newInstance(email, password, null, null, false)
+        slideInFragment(loginEmailPasswordFragment, true, LoginEmailPasswordFragment.TAG)
     }
 
     private fun startLoginViaWPCom() {
@@ -506,7 +536,8 @@ class LoginActivity : AppCompatActivity(), LoginListener, GoogleListener, Prolog
         displayName: String,
         profilePicture: Uri?
     ) {
-        // TODO: Hook for smartlock, if using
+        println("AMANDA-TEST > LoginActivity.saveCredentialsInSmartLock > $username, $password, $displayName, $profilePicture")
+        smartLockHelper?.saveCredentialsInSmartLock(username.orEmpty(), password.orEmpty(), displayName, profilePicture)
     }
 
     // Signup
@@ -636,5 +667,111 @@ class LoginActivity : AppCompatActivity(), LoginListener, GoogleListener, Prolog
 
     override fun useMagicLinkInstead(email: String?, verifyEmail: Boolean) {
         TODO("Not yet implemented")
+    }
+
+    private fun initSmartLockHelperConnection(): Boolean {
+        smartLockHelper = SmartLockHelper(this)
+        return smartLockHelper?.initSmartLockForPasswords() ?: false
+    }
+
+    override fun onConnected(bundle: Bundle?) {
+        WooLog.d(T.LOGIN, "Google API Client connected")
+
+        when (smartLockHelperState) {
+            NOT_TRIGGERED -> throw RuntimeException("SmartLock: Internal inconsistency error!")
+            TRIGGER_FILL_IN_ON_CONNECT -> {
+                smartLockHelperState = FINISHED
+
+                // Force account chooser
+                smartLockHelper?.disableAutoSignIn()
+                smartLockHelper?.smartLockAutoFill(this)
+            }
+            FINISH_ON_CONNECT -> {
+                smartLockHelperState = FINISHED
+            }
+            FINISHED -> { /* Do nothing */ }
+        }
+    }
+
+    override fun onConnectionSuspended(i: Int) {
+        WooLog.d(T.LOGIN, "Google API connection suspended")
+    }
+
+    override fun onConnectionFailed(connectionResult: ConnectionResult) {
+        WooLog.d(T.LOGIN, "SmartLock: connection result: $connectionResult")
+        smartLockHelperState = FINISHED
+    }
+
+    override fun onCredentialsRetrieved(credential: Credential) {
+        // TODO AMANDA - tracks
+
+        println("AMANDA-TEST > LoginActivity.onCredentialsRetrieved > $credential")
+
+        smartLockHelperState = FINISHED
+
+        val username = credential.id
+        val password = credential.password
+        jumpToEmailPassword(username, password)
+    }
+
+    override fun onCredentialsUnavailable() {
+        println("AMANDA-TEST > LoginActivity.onCredentialsUnavailable > ")
+
+        smartLockHelperState = FINISHED
+//        if (isSmartLockTriggeredFromPrologue) {
+//            return
+//        }
+    }
+
+    private fun checkSmartLockPasswordAndStartLogin() {
+        initSmartLockIfNotFinished(true)
+
+
+    }
+
+    /**
+     * @param triggerFillInOnConnect if true, display the account chooser dialog when the user
+     * has stored credentials. If false, initialize SmartLock to save user credentials.
+     */
+    private fun initSmartLockIfNotFinished(triggerFillInOnConnect: Boolean) {
+        if (smartLockHelperState == NOT_TRIGGERED) {
+            if (initSmartLockHelperConnection()) {
+                if (triggerFillInOnConnect) {
+                    smartLockHelperState = TRIGGER_FILL_IN_ON_CONNECT
+                } else {
+                    smartLockHelperState = FINISH_ON_CONNECT
+                }
+            } else {
+                // Just short-circuit the attempt to use SmartLockHelper
+                smartLockHelperState = FINISHED
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        when (requestCode) {
+            RequestCodes.SMART_LOCK_SAVE -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    // TODO AMANDA - tracks events
+
+                    WooLog.d(T.LOGIN, "Credentials saved")
+                } else {
+                    WooLog.d(T.LOGIN, "Credentials save canceled")
+                }
+            }
+            RequestCodes.SMART_LOCK_READ -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    WooLog.d(T.LOGIN, "Credentials retrieved")
+                    data?.getParcelableExtra<Credential>(Credential.EXTRA_KEY)?.let {
+                        onCredentialsRetrieved(it)
+                    }
+                } else {
+                    WooLog.d(T.LOGIN, "Credential read failed")
+                    onCredentialsUnavailable()
+                }
+            }
+        }
     }
 }
