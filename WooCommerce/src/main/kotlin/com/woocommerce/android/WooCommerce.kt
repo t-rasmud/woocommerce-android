@@ -10,6 +10,7 @@ import android.os.StrictMode.VmPolicy
 import androidx.multidex.MultiDexApplication
 import com.android.volley.VolleyLog
 import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.credentials.CredentialsOptions
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.api.GoogleApiClient
@@ -160,12 +161,13 @@ open class WooCommerce : MultiDexApplication(), HasAndroidInjector, ApplicationL
         )
 
         // Setup the Credentials Client so we can clean it up on logout
+        val options = CredentialsOptions.Builder().forceEnableSaveDialog().build()
         credentialsClient = GoogleApiClient.Builder(this)
             .addConnectionCallbacks(object : GoogleApiClient.ConnectionCallbacks {
                 override fun onConnected(bundle: Bundle?) {}
                 override fun onConnectionSuspended(i: Int) {}
             })
-            .addApi(Auth.CREDENTIALS_API)
+            .addApi(Auth.CREDENTIALS_API, options)
             .build()
         credentialsClient?.connect()
     }
